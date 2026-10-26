@@ -1,18 +1,17 @@
 BEGIN;
 
 CREATE TABLE app_user (
-    id integer PRIMARY KEY CHECK (id > 0),
-    keycloak_sub text UNIQUE CHECK (btrim(keycloak_sub) <> '')
+    id text PRIMARY KEY CHECK (btrim(id) <> '')
 );
 
 CREATE TABLE bank_account (
     id integer PRIMARY KEY CHECK (id > 0),
-    owner_id integer NOT NULL REFERENCES app_user(id)
+    owner_id text NOT NULL REFERENCES app_user(id)
 );
 
 CREATE TABLE user_device (
     id serial PRIMARY KEY,
-    user_id integer NOT NULL REFERENCES app_user(id),
+    user_id text NOT NULL REFERENCES app_user(id),
     device text NOT NULL CHECK (btrim(device) <> ''),
     first_seen_at timestamptz NOT NULL,
     last_seen_at timestamptz NOT NULL,
@@ -23,7 +22,7 @@ CREATE TABLE user_device (
 
 CREATE TABLE login_event (
     id serial PRIMARY KEY,
-    user_id integer NOT NULL REFERENCES app_user(id),
+    user_id text NOT NULL REFERENCES app_user(id),
     ip_address inet NOT NULL,
     occurred_at timestamptz NOT NULL,
     latitude numeric(9,6) CHECK (latitude BETWEEN -90 AND 90),
@@ -95,7 +94,7 @@ CREATE TABLE rule_evaluation (
 CREATE TABLE review_case (
     id serial PRIMARY KEY,
     check_id integer NOT NULL UNIQUE REFERENCES antifraud_check(id),
-    analyst_id integer REFERENCES app_user(id),
+    analyst_id text REFERENCES app_user(id),
     status text NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'IN_PROGRESS', 'CLOSED')),
     decision text CHECK (decision IN ('APPROVED', 'REJECTED')),
     comment text,
@@ -135,7 +134,7 @@ CREATE TABLE audit_log (
     id serial PRIMARY KEY,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     actor_type text NOT NULL CHECK (actor_type IN ('USER', 'ANALYST', 'ADMIN', 'SYSTEM')),
-    actor_id integer REFERENCES app_user(id),
+    actor_id text REFERENCES app_user(id),
     action text NOT NULL CHECK (btrim(action) <> ''),
     check_id integer REFERENCES antifraud_check(id),
     details jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(details) = 'object'),

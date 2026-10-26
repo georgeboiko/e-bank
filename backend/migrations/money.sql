@@ -2,7 +2,7 @@ BEGIN;
 
 CREATE TABLE account (
     id serial PRIMARY KEY,
-    owner_id integer,
+    owner_id text,
     type text NOT NULL CHECK (type IN ('CLIENT', 'TECHNICAL')),
     state text NOT NULL DEFAULT 'ACTIVE'
         CHECK (state IN ('ACTIVE', 'BLOCKED', 'CLOSED')),
@@ -10,7 +10,7 @@ CREATE TABLE account (
     reserved_sum numeric(19,2) NOT NULL DEFAULT 0,
     opened_at timestamptz NOT NULL DEFAULT now(),
     CHECK (
-        (type = 'CLIENT' AND owner_id IS NOT NULL AND owner_id > 0)
+        (type = 'CLIENT' AND owner_id IS NOT NULL AND btrim(owner_id) <> '')
         OR (type = 'TECHNICAL' AND owner_id IS NULL)
     ),
     CHECK (balance >= 0 AND balance <> 'NaN'::numeric),
@@ -60,7 +60,7 @@ CREATE TABLE audit_log (
     id serial PRIMARY KEY,
     occurred_at timestamptz NOT NULL DEFAULT now(),
     actor_type text NOT NULL CHECK (actor_type IN ('USER', 'ADMIN', 'SYSTEM')),
-    actor_id integer,
+    actor_id text,
     action text NOT NULL CHECK (action IN (
         'ACCOUNT_OPENED', 'ACCOUNT_BLOCKED', 'ACCOUNT_UNBLOCKED',
         'ACCOUNT_CLOSED', 'LIMIT_CHANGED'
@@ -69,7 +69,7 @@ CREATE TABLE audit_log (
     details jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(details) = 'object'),
     CHECK (
         (actor_type = 'SYSTEM' AND actor_id IS NULL)
-        OR (actor_type <> 'SYSTEM' AND actor_id IS NOT NULL AND actor_id > 0)
+        OR (actor_type <> 'SYSTEM' AND actor_id IS NOT NULL AND btrim(actor_id) <> '')
     )
 );
 
