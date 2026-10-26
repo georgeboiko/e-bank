@@ -43,7 +43,7 @@ CREATE TABLE transfer_attempt (
     from_account_id integer NOT NULL REFERENCES bank_account(id),
     to_account_id integer NOT NULL REFERENCES bank_account(id),
     amount numeric(19,2) NOT NULL CHECK (amount > 0 AND amount <> 'NaN'::numeric),
-    device text,
+    device text CHECK (btrim(device) <> ''),
     ip_address inet,
     created_at timestamptz NOT NULL,
     received_at timestamptz NOT NULL DEFAULT now(),
@@ -143,5 +143,154 @@ CREATE TABLE audit_log (
         OR (actor_type <> 'SYSTEM' AND actor_id IS NOT NULL)
     )
 );
+
+CREATE FUNCTION protect_antifraud_history()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' AND NEW IS NOT DISTINCT FROM OLD THEN
+        RETURN NEW;
+    END IF;
+
+    RAISE EXCEPTION 'Записи таблицы % нельзя изменять или удалять', TG_TABLE_NAME;
+END;
+$$;
+
+CREATE TRIGGER protect_bank_account_details
+BEFORE UPDATE OR DELETE ON bank_account
+FOR EACH ROW EXECUTE FUNCTION protect_antifraud_history();
+
+CREATE TRIGGER protect_check_history
+BEFORE UPDATE OR DELETE ON antifraud_check
+FOR EACH ROW EXECUTE FUNCTION protect_antifraud_history();
+
+CREATE TRIGGER protect_rule_history
+BEFORE UPDATE OR DELETE ON rule_evaluation
+FOR EACH ROW EXECUTE FUNCTION protect_antifraud_history();
+
+CREATE TRIGGER protect_audit_history
+BEFORE UPDATE OR DELETE ON audit_log
+FOR EACH ROW EXECUTE FUNCTION protect_antifraud_history();
+
+-- Проверка и результаты всех восьми правил сохраняются одной транзакцией.
+-- Для отсутствующих данных также нужна строка: SKIPPED с нулевым score.
+CREATE FUNCTION validate_check_results()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    check_id_to_validate integer;
+    stored_score integer;
+    rule_count bigint;
+    calculated_score integer;
+BEGIN
+    IF TG_TABLE_NAME = 'antifraud_check' THEN
+        check_id_to_validate := NEW.id;
+    ELSE
+        check_id_to_validate := NEW.check_id;
+    END IF;
+
+    SELECT risk_score INTO stored_score FROM antifraud_check
+    WHERE id = check_id_to_validate;
+
+    SELECT count(*), least(100,
+        coalesce(max(CASE WHEN rule_id IN (1, 4) THEN score ELSE 0 END), 0)
+        + coalesce(sum(CASE WHEN rule_id NOT IN (1, 4) THEN score ELSE 0 END), 0)
+    ) INTO rule_count, calculated_score
+    FROM rule_evaluation WHERE check_id = check_id_to_validate;
+
+    IF rule_count <> 8 THEN
+        RAISE EXCEPTION 'Для проверки % нужны результаты всех восьми правил',
+            check_id_to_validate;
+    END IF;
+
+    IF stored_score <> calculated_score THEN
+        RAISE EXCEPTION 'Баллы проверки % не соответствуют результатам правил: % вместо %',
+            check_id_to_validate, stored_score, calculated_score;
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+CREATE CONSTRAINT TRIGGER validate_check_results
+AFTER INSERT ON antifraud_check
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION validate_check_results();
+
+CREATE CONSTRAINT TRIGGER validate_rule_results
+AFTER INSERT ON rule_evaluation
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW EXECUTE FUNCTION validate_check_results();
+
+CREATE FUNCTION validate_review_case()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM antifraud_check
+        WHERE id = NEW.check_id AND automatic_decision = 'REVIEW_REQUIRED'
+    ) THEN
+        RAISE EXCEPTION 'Ручной разбор допустим только для REVIEW_REQUIRED';
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.status <> 'OPEN' THEN
+            RAISE EXCEPTION 'Новый разбор должен иметь статус OPEN';
+        END IF;
+        RETURN NEW;
+    END IF;
+
+    IF ROW(NEW.id, NEW.check_id, NEW.created_at)
+       IS DISTINCT FROM ROW(OLD.id, OLD.check_id, OLD.created_at) THEN
+        RAISE EXCEPTION 'Нельзя менять идентификатор, проверку и дату создания разбора';
+    END IF;
+
+    IF OLD.status = 'CLOSED' AND NEW IS DISTINCT FROM OLD THEN
+        RAISE EXCEPTION 'Закрытый разбор нельзя изменять';
+    END IF;
+
+    IF NEW.status <> OLD.status AND NOT (
+        (OLD.status = 'OPEN' AND NEW.status IN ('IN_PROGRESS', 'CLOSED'))
+        OR (OLD.status = 'IN_PROGRESS' AND NEW.status = 'CLOSED')
+    ) THEN
+        RAISE EXCEPTION 'Недопустимый переход разбора: % -> %', OLD.status, NEW.status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER validate_review_case
+BEFORE INSERT OR UPDATE ON review_case
+FOR EACH ROW EXECUTE FUNCTION validate_review_case();
+
+CREATE TRIGGER protect_review_history
+BEFORE DELETE ON review_case
+FOR EACH ROW EXECUTE FUNCTION protect_antifraud_history();
+
+CREATE FUNCTION validate_final_decision_event()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        IF ROW(NEW.event_id, NEW.check_id, NEW.payload, NEW.created_at)
+           IS DISTINCT FROM ROW(OLD.event_id, OLD.check_id, OLD.payload, OLD.created_at) THEN
+            RAISE EXCEPTION 'Содержимое события решения нельзя изменять';
+        END IF;
+        RETURN NEW;
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM antifraud_check
+        WHERE id = NEW.check_id AND automatic_decision = 'REVIEW_REQUIRED'
+    ) AND NOT EXISTS (
+        SELECT 1 FROM review_case WHERE check_id = NEW.check_id AND status = 'CLOSED'
+    ) THEN
+        RAISE EXCEPTION 'Событие окончательного решения требует закрытого ручного разбора';
+    END IF;
+
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER validate_final_decision_event
+BEFORE INSERT OR UPDATE ON outbox_event
+FOR EACH ROW EXECUTE FUNCTION validate_final_decision_event();
 
 COMMIT;

@@ -20,4 +20,15 @@ CREATE TABLE outbox_event (
     CHECK (published = (published_at IS NOT NULL))
 );
 
+CREATE FUNCTION protect_login_history()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'Историю входов нельзя изменять или удалять';
+END;
+$$;
+
+CREATE TRIGGER protect_login_history
+BEFORE UPDATE OR DELETE ON user_login
+FOR EACH ROW EXECUTE FUNCTION protect_login_history();
+
 COMMIT;
