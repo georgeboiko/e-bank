@@ -1,0 +1,710 @@
+<mxfile host="app.diagrams.net" pages="3">
+  <diagram name="User" id="Fk69QdVK2UWLiTEkvZTB">
+    <mxGraphModel dx="1002" dy="681" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1260" pageHeight="620" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="User-user" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Пользователь" vertex="1">
+          <mxGeometry height="92" width="380" x="120" y="194" as="geometry" />
+        </mxCell>
+        <mxCell id="User-user-attribute-1" parent="User-user" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="380" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="User-user-attribute-1-text" parent="User-user-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор пользователя" vertex="1">
+          <mxGeometry height="28" width="380" as="geometry">
+            <mxRectangle height="28" width="380" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="User-user-attribute-2" parent="User-user" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="380" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="User-user-attribute-2-text" parent="User-user-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Учётная запись" vertex="1">
+          <mxGeometry height="28" width="380" as="geometry">
+            <mxRectangle height="28" width="380" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="User-login" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Вход в систему" vertex="1">
+          <mxGeometry height="120" width="380" x="760" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="User-login-attribute-1" parent="User-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="380" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="User-login-attribute-1-text" parent="User-login-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор входа" vertex="1">
+          <mxGeometry height="28" width="380" as="geometry" />
+        </mxCell>
+        <mxCell id="User-login-attribute-2" parent="User-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="380" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="User-login-attribute-2-text" parent="User-login-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент входа" vertex="1">
+          <mxGeometry height="28" width="380" as="geometry" />
+        </mxCell>
+        <mxCell id="User-login-attribute-3" parent="User-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="380" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="User-login-attribute-3-text" parent="User-login-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="IP-адрес" vertex="1">
+          <mxGeometry height="28" width="380" as="geometry" />
+        </mxCell>
+        <mxCell id="User-edge-user-login" edge="1" parent="1" source="User-user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="User-login" value="выполняет">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Money" id="RzVhOaDldoVVEE3nu6ck">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1700" pageHeight="1100" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Money-account" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Банковский счёт" vertex="1">
+          <mxGeometry height="204" width="350" x="540" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-1" parent="Money-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-1-text" parent="Money-account-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор счёта" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-2" parent="Money-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-2-text" parent="Money-account-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Тип счёта" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-3" parent="Money-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-3-text" parent="Money-account-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Состояние счёта" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-4" parent="Money-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-4-text" parent="Money-account-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Баланс" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-5" parent="Money-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-5-text" parent="Money-account-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Зарезервированная сумма" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-6" parent="Money-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-account-attribute-6-text" parent="Money-account-attribute-6" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент открытия" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Перевод" vertex="1">
+          <mxGeometry height="288" width="440" x="540" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-1" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-1-text" parent="Money-transfer-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор перевода" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-2" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-2-text" parent="Money-transfer-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Сумма" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-3" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-3-text" parent="Money-transfer-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Состояние перевода" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-4" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-4-text" parent="Money-transfer-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Причина отказа" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-5" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-5-text" parent="Money-transfer-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Устройство инициатора" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-6" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-6-text" parent="Money-transfer-attribute-6" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="IP-адрес инициатора" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-7" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-7-text" parent="Money-transfer-attribute-7" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент создания" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-8" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="232" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-8-text" parent="Money-transfer-attribute-8" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент изменения" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-9" parent="Money-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-attribute-9-text" parent="Money-transfer-attribute-9" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент завершения" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-entry" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Проводка" vertex="1">
+          <mxGeometry height="120" width="350" x="1220" y="140" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-entry-attribute-1" parent="Money-entry" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-entry-attribute-1-text" parent="Money-entry-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор проводки" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-entry-attribute-2" parent="Money-entry" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-entry-attribute-2-text" parent="Money-entry-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Сумма со знаком" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-entry-attribute-3" parent="Money-entry" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-entry-attribute-3-text" parent="Money-entry-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент проведения" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-payment" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Внешний платёж" vertex="1">
+          <mxGeometry height="148" width="350" x="1250" y="633" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-payment-attribute-1" parent="Money-payment" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-payment-attribute-1-text" parent="Money-payment-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор платежа" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-payment-attribute-2" parent="Money-payment" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-payment-attribute-2-text" parent="Money-payment-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Номер у платёжного провайдера" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-payment-attribute-3" parent="Money-payment" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-payment-attribute-3-text" parent="Money-payment-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Сумма" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-payment-attribute-4" parent="Money-payment" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="350" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-payment-attribute-4-text" parent="Money-payment-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент создания" vertex="1">
+          <mxGeometry height="28" width="350" as="geometry">
+            <mxRectangle height="28" width="350" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-audit" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Событие аудита" vertex="1">
+          <mxGeometry height="176" width="320" x="60" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-1" parent="Money-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-1-text" parent="Money-audit-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор события" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-2" parent="Money-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-2-text" parent="Money-audit-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент действия" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-3" parent="Money-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-3-text" parent="Money-audit-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Роль участника" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-4" parent="Money-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-4-text" parent="Money-audit-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Действие" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-5" parent="Money-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-audit-attribute-5-text" parent="Money-audit-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Описание действия" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-edge-account-audit" edge="1" parent="1" source="Money-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERzeroToOne;endArrow=ERzeroToMany;exitX=0;exitY=0.75;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Money-audit" value="имеет историю">
+          <mxGeometry relative="1" x="0.10000000000000009" as="geometry">
+            <mxPoint x="-14" as="offset" />
+            <Array as="points">
+              <mxPoint x="450" y="303" />
+              <mxPoint x="450" y="558" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-edge-account-transfer-from" edge="1" parent="1" source="Money-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=0.3;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.24;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="Money-transfer" value="счёт&lt;br&gt;отправителя">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-20" as="offset" />
+            <Array as="points">
+              <mxPoint x="645" y="425" />
+              <mxPoint x="645.6" y="425" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-edge-account-transfer-to" edge="1" parent="1" source="Money-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=0.8;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.76;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="Money-transfer" value="счёт&lt;br&gt;получателя">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="20" as="offset" />
+            <Array as="points">
+              <mxPoint x="820" y="425" />
+              <mxPoint x="874.4" y="425" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-edge-account-entry" edge="1" parent="1" source="Money-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=1;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Money-entry" value="отражается в проводке">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-12" as="offset" />
+            <Array as="points">
+              <mxPoint x="1220" y="201" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-edge-transfer-entry" edge="1" parent="1" source="Money-transfer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=1;exitY=0.15;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="Money-entry" value="содержит проводки">
+          <mxGeometry relative="1" x="0.2587" as="geometry">
+            <mxPoint y="-12" as="offset" />
+            <Array as="points">
+              <mxPoint x="1050" y="563.2" />
+              <mxPoint x="1050" y="350" />
+              <mxPoint x="1395" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-edge-transfer-payment" edge="1" parent="1" source="Money-transfer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToOne;exitX=1;exitY=0.65;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Money-payment" value="обогащается&lt;br&gt;внешним платежом&lt;br&gt;&amp;nbsp;(для тех. переводов)">
+          <mxGeometry relative="1" x="0.037" y="27" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="1220" y="707.2" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Antifraud" id="Ss3jFsp0Bhta3OMPaNJb">
+    <mxGraphModel dx="2182" dy="1484" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2300" pageHeight="1470" background="#FFFFFF" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Antifraud-user" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Пользователь" vertex="1">
+          <mxGeometry height="92" width="340" x="120" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-user-attribute-1" parent="Antifraud-user" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="340" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-user-attribute-1-text" parent="Antifraud-user-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор пользователя" vertex="1">
+          <mxGeometry height="28" width="340" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-user-attribute-2" parent="Antifraud-user" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="340" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-user-attribute-2-text" parent="Antifraud-user-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Учётная запись" vertex="1">
+          <mxGeometry height="28" width="340" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-device" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Устройство" vertex="1">
+          <mxGeometry height="64" width="340" x="120" y="478" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-device-attribute-1" parent="Antifraud-device" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="340" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-device-attribute-1-text" parent="Antifraud-device-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор устройства" vertex="1">
+          <mxGeometry height="28" width="340" as="geometry">
+            <mxRectangle height="28" width="340" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-usage" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Использование устройства" vertex="1">
+          <mxGeometry height="120" width="370" x="580" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-usage-attribute-1" parent="Antifraud-usage" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="370" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-usage-attribute-1-text" parent="Antifraud-usage-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Первое использование" vertex="1">
+          <mxGeometry height="28" width="370" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-usage-attribute-2" parent="Antifraud-usage" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="370" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-usage-attribute-2-text" parent="Antifraud-usage-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Последнее использование" vertex="1">
+          <mxGeometry height="28" width="370" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-usage-attribute-3" parent="Antifraud-usage" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="370" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-usage-attribute-3-text" parent="Antifraud-usage-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Число использований" vertex="1">
+          <mxGeometry height="28" width="370" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Вход в систему" vertex="1">
+          <mxGeometry height="204" width="430" x="120" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-1" parent="Antifraud-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="430" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-1-text" parent="Antifraud-login-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор входа" vertex="1">
+          <mxGeometry height="28" width="430" as="geometry">
+            <mxRectangle height="28" width="430" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-2" parent="Antifraud-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="430" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-2-text" parent="Antifraud-login-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="IP-адрес" vertex="1">
+          <mxGeometry height="28" width="430" as="geometry">
+            <mxRectangle height="28" width="430" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-3" parent="Antifraud-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="430" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-3-text" parent="Antifraud-login-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент входа" vertex="1">
+          <mxGeometry height="28" width="430" as="geometry">
+            <mxRectangle height="28" width="430" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-4" parent="Antifraud-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="430" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-4-text" parent="Antifraud-login-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Географические координаты" vertex="1">
+          <mxGeometry height="28" width="430" as="geometry">
+            <mxRectangle height="28" width="430" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-5" parent="Antifraud-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="430" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-5-text" parent="Antifraud-login-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Актуальность геолокации" vertex="1">
+          <mxGeometry height="28" width="430" as="geometry">
+            <mxRectangle height="28" width="430" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-6" parent="Antifraud-login" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="430" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-login-attribute-6-text" parent="Antifraud-login-attribute-6" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент определения геолокации" vertex="1">
+          <mxGeometry height="28" width="430" as="geometry">
+            <mxRectangle height="28" width="430" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-account" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Банковский счёт" vertex="1">
+          <mxGeometry height="64" width="440" x="1060" y="174" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-account-attribute-1" parent="Antifraud-account" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-account-attribute-1-text" parent="Antifraud-account-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор счёта" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Проверяемый перевод" vertex="1">
+          <mxGeometry height="260" width="440" x="1060" y="451" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-1" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-1-text" parent="Antifraud-transfer-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор перевода" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-2" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-2-text" parent="Antifraud-transfer-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Сумма" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-3" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-3-text" parent="Antifraud-transfer-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Устройство инициатора" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-4" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-4-text" parent="Antifraud-transfer-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="IP-адрес инициатора" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-5" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-5-text" parent="Antifraud-transfer-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент создания" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-6" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-6-text" parent="Antifraud-transfer-attribute-6" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Географические координаты" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-7" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-7-text" parent="Antifraud-transfer-attribute-7" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Актуальность геолокации" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-8" parent="Antifraud-transfer" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="232" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-transfer-attribute-8-text" parent="Antifraud-transfer-attribute-8" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент определения геолокации" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-check" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Проверка антифрода" vertex="1">
+          <mxGeometry height="148" width="470" x="1680" y="450" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-1" parent="Antifraud-check" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-1-text" parent="Antifraud-check-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор проверки" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-2" parent="Antifraud-check" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-2-text" parent="Antifraud-check-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Итоговый балл риска" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-3" parent="Antifraud-check" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-3-text" parent="Antifraud-check-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Автоматическое решение" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-4" parent="Antifraud-check" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-check-attribute-4-text" parent="Antifraud-check-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент проверки" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Результат правила" vertex="1">
+          <mxGeometry height="148" width="470" x="1680" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-1" parent="Antifraud-rule" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-1-text" parent="Antifraud-rule-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Код правила" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-2" parent="Antifraud-rule" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-2-text" parent="Antifraud-rule-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Результат срабатывания" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-3" parent="Antifraud-rule" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-3-text" parent="Antifraud-rule-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Баллы" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-4" parent="Antifraud-rule" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-rule-attribute-4-text" parent="Antifraud-rule-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Причина результата" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Ручное рассмотрение" vertex="1">
+          <mxGeometry height="204" width="440" x="1060" y="760" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-1" parent="Antifraud-review" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-1-text" parent="Antifraud-review-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор рассмотрения" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-2" parent="Antifraud-review" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-2-text" parent="Antifraud-review-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Состояние рассмотрения" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-3" parent="Antifraud-review" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-3-text" parent="Antifraud-review-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Решение аналитика" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-4" parent="Antifraud-review" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-4-text" parent="Antifraud-review-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Комментарий аналитика" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-5" parent="Antifraud-review" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-5-text" parent="Antifraud-review-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент создания" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-6" parent="Antifraud-review" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="440" y="176" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-review-attribute-6-text" parent="Antifraud-review-attribute-6" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент решения" vertex="1">
+          <mxGeometry height="28" width="440" as="geometry">
+            <mxRectangle height="28" width="440" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-audit" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Событие аудита" vertex="1">
+          <mxGeometry height="176" width="470" x="1680" y="850" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-1" parent="Antifraud-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-1-text" parent="Antifraud-audit-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Идентификатор события" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-2" parent="Antifraud-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-2-text" parent="Antifraud-audit-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Момент действия" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-3" parent="Antifraud-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="92" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-3-text" parent="Antifraud-audit-attribute-3" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Роль участника" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-4" parent="Antifraud-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-4-text" parent="Antifraud-audit-attribute-4" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Действие" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-5" parent="Antifraud-audit" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="470" y="148" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-audit-attribute-5-text" parent="Antifraud-audit-attribute-5" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Описание действия" vertex="1">
+          <mxGeometry height="28" width="470" as="geometry" />
+        </mxCell>
+        <mxCell id="Antifraud-edge-user-account" edge="1" parent="1" source="Antifraud-user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-account" value="владеет">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-user-usage" edge="1" parent="1" source="Antifraud-user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=0.8;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-usage" value="использует устройство">
+          <mxGeometry relative="1" x="0.040000000000000036" as="geometry">
+            <mxPoint y="-12" as="offset" />
+            <Array as="points">
+              <mxPoint x="392" y="350" />
+              <mxPoint x="765" y="350" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-device-usage" edge="1" parent="1" source="Antifraud-device" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=1;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-usage" value="участвует&lt;br&gt;в использовании">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-23" as="offset" />
+            <Array as="points">
+              <mxPoint x="460" y="510" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-user-login" edge="1" parent="1" source="Antifraud-user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=0;exitY=0.5;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-login" value="выполняет вход">
+          <mxGeometry relative="1" x="0.3962" y="10" as="geometry">
+            <mxPoint as="offset" />
+            <Array as="points">
+              <mxPoint x="80" y="206" />
+              <mxPoint x="80" y="762" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-account-transfer-from" edge="1" parent="1" source="Antifraud-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=0.25;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-transfer" value="счёт отправителя">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-account-transfer-to" edge="1" parent="1" source="Antifraud-account" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToMany;exitX=0.75;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.75;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-transfer" value="счёт получателя">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="5" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-transfer-check" edge="1" parent="1" source="Antifraud-transfer" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToOne;exitX=1;exitY=0.25;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0;entryY=0.45;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-check" value="проверяется">
+          <mxGeometry relative="1" x="-0.0033" as="geometry">
+            <mxPoint y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-check-rule" edge="1" parent="1" source="Antifraud-check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERoneToMany;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-rule" value="содержит результаты">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-check-review" edge="1" parent="1" source="Antifraud-check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERone;endArrow=ERzeroToOne;exitX=0;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.25;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-review" value="требует&lt;br&gt;ручного рассмотрения">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-user-review" edge="1" parent="1" source="Antifraud-user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERzeroToOne;endArrow=ERzeroToMany;exitX=0;exitY=0.8;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-review" value="рассматривает&lt;br&gt;в роли аналитика">
+          <mxGeometry relative="1" x="0.45999999999999996" as="geometry">
+            <mxPoint y="-22" as="offset" />
+            <Array as="points">
+              <mxPoint x="20" y="233.6" />
+              <mxPoint x="20" y="1030" />
+              <mxPoint x="1280" y="1030" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-check-audit" edge="1" parent="1" source="Antifraud-check" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERzeroToOne;endArrow=ERzeroToMany;exitX=0.6;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.6;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-audit" value="имеет историю">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-12" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Antifraud-edge-user-audit" edge="1" parent="1" source="Antifraud-user" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;fontColor=#111111;strokeColor=#111111;strokeWidth=1;startFill=0;endFill=0;labelBackgroundColor=#FFFFFF;spacing=3;jumpStyle=arc;jumpSize=6;startArrow=ERzeroToOne;endArrow=ERzeroToMany;exitX=0.5;exitY=0;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" target="Antifraud-audit" value="совершает действие">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint y="-12" as="offset" />
+            <Array as="points">
+              <mxPoint x="290" y="120" />
+              <mxPoint x="2220" y="120" />
+              <mxPoint x="2220" y="938" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
