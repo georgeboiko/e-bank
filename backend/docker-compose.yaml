@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: ${USER_DB_USER:?}
       POSTGRES_PASSWORD: ${USER_DB_PASSWORD:?}
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:5433:5432"
     volumes:
       - user_data:/var/lib/postgresql
     healthcheck:
@@ -22,7 +22,7 @@ services:
       POSTGRES_USER: ${MONEY_DB_USER:?}
       POSTGRES_PASSWORD: ${MONEY_DB_PASSWORD:?}
     ports:
-      - "127.0.0.1:5433:5432"
+      - "127.0.0.1:5434:5432"
     volumes:
       - money_data:/var/lib/postgresql
     healthcheck:
@@ -38,7 +38,7 @@ services:
       POSTGRES_USER: ${ANTIFRAUD_DB_USER:?}
       POSTGRES_PASSWORD: ${ANTIFRAUD_DB_PASSWORD:?}
     ports:
-      - "127.0.0.1:5434:5432"
+      - "127.0.0.1:5435:5432"
     volumes:
       - antifraud_data:/var/lib/postgresql
     healthcheck:
