@@ -63,9 +63,10 @@ BEGIN
     ELSE
         INSERT INTO outbox_event (event_id, check_id, payload, created_at)
         VALUES (p_event_id, check_id_created, jsonb_build_object(
-            'eventId', p_event_id, 'eventType', 'AntifraudDecision', 'occurredAt', operation_at,
+            'eventId', p_event_id, 'eventType', 'FraudDecision', 'occurredAt', operation_at,
             'data', jsonb_build_object(
-                'transferId', p_transfer_id, 'decision', decision, 'riskScore', total_score
+                'transferId', p_transfer_id, 'decision', decision, 'riskScore', total_score,
+                'source', 'AUTOMATIC'
             )
         ), operation_at);
     END IF;
@@ -118,10 +119,10 @@ BEGIN
 
     INSERT INTO outbox_event (event_id, check_id, payload, created_at)
     VALUES (p_event_id, current_check.id, jsonb_build_object(
-        'eventId', p_event_id, 'eventType', 'AntifraudDecision', 'occurredAt', operation_at,
+        'eventId', p_event_id, 'eventType', 'FraudDecision', 'occurredAt', operation_at,
         'data', jsonb_build_object(
             'transferId', current_check.transfer_id, 'decision', p_decision,
-            'riskScore', current_check.risk_score
+            'riskScore', current_check.risk_score, 'source', 'ANALYST'
         )
     ), operation_at);
     INSERT INTO audit_log (occurred_at, actor_type, actor_id, action, check_id, details)

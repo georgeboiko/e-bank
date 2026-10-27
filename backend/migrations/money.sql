@@ -13,8 +13,11 @@ CREATE TABLE account (
         (type = 'CLIENT' AND owner_id IS NOT NULL AND btrim(owner_id) <> '')
         OR (type = 'TECHNICAL' AND owner_id IS NULL)
     ),
-    CHECK (balance >= 0 AND balance <> 'NaN'::numeric),
-    CHECK (reserved_sum >= 0 AND reserved_sum <= balance),
+    CHECK (balance <> 'NaN'::numeric),
+    CHECK (
+        (type = 'CLIENT' AND balance >= 0 AND reserved_sum >= 0 AND reserved_sum <= balance)
+        OR (type = 'TECHNICAL' AND reserved_sum = 0)
+    ),
     CHECK (state <> 'CLOSED' OR (balance = 0 AND reserved_sum = 0))
 );
 
@@ -106,6 +109,13 @@ CREATE TABLE external_payment (
 CREATE FUNCTION protect_account_details()
 RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
+    IF TG_OP = 'INSERT' THEN
+        IF NEW.balance <> 0 THEN
+            RAISE EXCEPTION 'Счёт открывается с нулевым балансом';
+        END IF;
+        RETURN NEW;
+    END IF;
+
     IF ROW(NEW.id, NEW.owner_id, NEW.type, NEW.opened_at)
        IS DISTINCT FROM ROW(OLD.id, OLD.owner_id, OLD.type, OLD.opened_at) THEN
         RAISE EXCEPTION 'Нельзя менять идентификатор, владельца, тип и дату открытия счёта';
@@ -115,13 +125,33 @@ BEGIN
         RAISE EXCEPTION 'Закрытый счёт нельзя открыть повторно';
     END IF;
 
+    IF NEW.balance IS DISTINCT FROM OLD.balance AND pg_trigger_depth() < 2 THEN
+        RAISE EXCEPTION 'Баланс изменяется только при добавлении проводки';
+    END IF;
+
     RETURN NEW;
 END;
 $$;
 
 CREATE TRIGGER protect_account_details
-BEFORE UPDATE ON account
+BEFORE INSERT OR UPDATE ON account
 FOR EACH ROW EXECUTE FUNCTION protect_account_details();
+
+CREATE FUNCTION apply_ledger_entry()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE account SET balance = balance + NEW.amount
+    WHERE id = NEW.account_id AND state = 'ACTIVE';
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Счёт % не найден или не активен', NEW.account_id;
+    END IF;
+    RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER apply_ledger_entry
+AFTER INSERT ON ledger_entry
+FOR EACH ROW EXECUTE FUNCTION apply_ledger_entry();
 
 CREATE FUNCTION validate_transfer_change()
 RETURNS trigger LANGUAGE plpgsql AS $$
@@ -192,11 +222,6 @@ CREATE TRIGGER protect_audit_history
 BEFORE UPDATE OR DELETE ON audit_log
 FOR EACH ROW EXECUTE FUNCTION protect_money_history();
 
--- Завершение перевода и две проводки сохраняются одной транзакцией.
--- Подтверждение пополнения к этому моменту уже должно существовать.
--- Проверяем итоговое состояние перед COMMIT, когда все записи уже добавлены.
--- Обновление balance и reserved_sum выполняет сервис в той же транзакции:
--- этот триггер сам деньги не списывает и не зачисляет.
 CREATE FUNCTION validate_transfer_accounting()
 RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
