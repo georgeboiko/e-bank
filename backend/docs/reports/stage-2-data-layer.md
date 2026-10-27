@@ -5,7 +5,7 @@
 
 Разработать модели данных электронного банка и подготовить их реализацию в PostgreSQL: таблицы, ограничения целостности, триггеры, функции и процедуры, индексы и скрипты подготовки тестовых БД.
 
-Основанием служат [описание предметной области и прецеденты этапа 1](srs/srs.pdf), а также [описание правил антифрода](design-docs/antifraud.pdf).
+Основанием служат [описание предметной области и прецеденты этапа 1](stage-1-srs.pdf), а также [описание правил антифрода](../design-docs/antifraud.pdf).
 
 Система разделена на три сервиса с отдельными экземплярами PostgreSQL:
 
@@ -23,19 +23,19 @@
 
 На диаграмме Antifraud представлены 10 сущностей, поэтому требование о наличии не менее 10 сущностей выполнено уже в этой части модели.
 
-Исходный файл: [infologic.drawio](data-models/source/infologic.drawio).
+Исходный файл: [infologic.drawio](../data-models/source/infologic.drawio).
 
 ### User
 
-![Инфологическая модель User](data-models/compiled/infologic/infologic-user.svg)
+![Инфологическая модель User](../data-models/compiled/infologic/infologic-user.svg)
 
 ### Money
 
-![Инфологическая модель Money](data-models/compiled/infologic/infologic-money.svg)
+![Инфологическая модель Money](../data-models/compiled/infologic/infologic-money.svg)
 
 ### Antifraud
 
-![Инфологическая модель Antifraud](data-models/compiled/infologic/infologic-antifraud.svg)
+![Инфологическая модель Antifraud](../data-models/compiled/infologic/infologic-antifraud.svg)
 
 ### Связь «многие-ко-многим»
 
@@ -47,11 +47,11 @@
 
 ## 3. Даталогическая модель
 
-Исходный файл: [datalogic.drawio](data-models/source/datalogic.drawio).
+Исходный файл: [datalogic.drawio](../data-models/source/datalogic.drawio).
 
 ### User
 
-![Даталогическая модель User](data-models/compiled/datalogic/datalogic-user.svg)
+![Даталогическая модель User](../data-models/compiled/datalogic/datalogic-user.svg)
 
 | Таблица | Ключи и основные поля | Назначение |
 | --- | --- | --- |
@@ -60,7 +60,7 @@
 
 ### Money
 
-![Даталогическая модель Money](data-models/compiled/datalogic/datalogic-money.svg)
+![Даталогическая модель Money](../data-models/compiled/datalogic/datalogic-money.svg)
 
 | Таблица | Ключи и основные поля | Назначение |
 | --- | --- | --- |
@@ -74,7 +74,7 @@
 
 ### Antifraud
 
-![Даталогическая модель Antifraud](data-models/compiled/datalogic/datalogic-antifraud.svg)
+![Даталогическая модель Antifraud](../data-models/compiled/datalogic/datalogic-antifraud.svg)
 
 | Таблица | Ключи и основные поля | Назначение |
 | --- | --- | --- |
@@ -102,7 +102,7 @@
 
 ## 4. Реализация PostgreSQL и целостность данных
 
-Структура реализована в [user.sql](../migrations/user.sql), [money.sql](../migrations/money.sql) и [antifraud.sql](../migrations/antifraud.sql).
+Структура реализована в [user.sql](../../migrations/user.sql), [money.sql](../../migrations/money.sql) и [antifraud.sql](../../migrations/antifraud.sql).
 
 ### Ограничения DDL
 
@@ -139,7 +139,7 @@
 
 ## 5. Создание, удаление БД и тестовые данные
 
-Для локального окружения подготовлен [docker-compose.yaml](../docker-compose.yaml) с тремя экземплярами PostgreSQL 18 и отдельными volumes для данных.
+Для локального окружения подготовлен [docker-compose.yaml](../../migrations/docker-compose.yaml) с тремя экземплярами PostgreSQL 18 и отдельными volumes для данных.
 
 | Сервис | Адрес подключения |
 | --- | --- |
@@ -151,9 +151,9 @@
 
 | Скрипт | Назначение |
 | --- | --- |
-| [create.sh](../migrations/create.sh) | Создаёт отсутствующие БД, затем выполняет файлы структуры, операций и индексов для каждого сервиса. |
-| [seed.sh](../migrations/seed.sh) | Загружает `user_seed.sql`, `money_seed.sql`, `antifraud_seed.sql`. |
-| [drop.sh](../migrations/drop.sh) | Удаляет три БД, указанные в `.env.test`. |
+| [create.sh](../../migrations/create.sh) | Создаёт отсутствующие БД, затем выполняет файлы структуры, операций и индексов для каждого сервиса. |
+| [seed.sh](../../migrations/seed.sh) | Загружает `user_seed.sql`, `money_seed.sql`, `antifraud_seed.sql`. |
+| [drop.sh](../../migrations/drop.sh) | Удаляет три БД, указанные в `.env.test`. |
 
 Для первоначальной подготовки нужны Docker Compose и клиент `psql`. Команды выполняются из каталога `backend`:
 
@@ -176,7 +176,7 @@ docker compose --env-file .env.test up -d --wait
 
 ## 6. Функции и процедуры PL/pgSQL
 
-Реализация находится в [user_operations.sql](../migrations/user_operations.sql), [money_operations.sql](../migrations/money_operations.sql) и [antifraud_operations.sql](../migrations/antifraud_operations.sql).
+Реализация находится в [user_operations.sql](../../migrations/user_operations.sql), [money_operations.sql](../../migrations/money_operations.sql) и [antifraud_operations.sql](../../migrations/antifraud_operations.sql).
 
 | Операция | Прецедент | Действие |
 | --- | --- | --- |
@@ -207,7 +207,7 @@ docker compose --env-file .env.test up -d --wait
 
 ## 7. Индексы и связь с бизнес-процессами
 
-Подготовлено 19 дополнительных индексов: один в User, восемь в Money и десять в Antifraud. Файлы: [user_indexes.sql](../migrations/user_indexes.sql), [money_indexes.sql](../migrations/money_indexes.sql), [antifraud_indexes.sql](../migrations/antifraud_indexes.sql).
+Подготовлено 19 дополнительных индексов: один в User, восемь в Money и десять в Antifraud. Файлы: [user_indexes.sql](../../migrations/user_indexes.sql), [money_indexes.sql](../../migrations/money_indexes.sql), [antifraud_indexes.sql](../../migrations/antifraud_indexes.sql).
 
 | Индексы | Прецеденты и обоснование |
 | --- | --- |
@@ -228,4 +228,4 @@ docker compose --env-file .env.test up -d --wait
 
 Первичные ключи и ограничения `UNIQUE` уже обеспечивают индексы для поиска по ID, ключам идемпотентности, идентификаторам внешних платежей и уникальным связям. В частности, R3 использует имеющийся `UNIQUE (user_id, device)`; отдельный индекс для этой пары не создаётся.
 
-Подробное обоснование каждого индекса приведено в [отдельном документе](data-models/indexes.md).
+Подробное обоснование каждого индекса приведено в [отдельном документе](../data-models/indexes.md).
