@@ -7,7 +7,27 @@ INSERT INTO account (id, owner_id, type, balance, opened_at) VALUES
     (4, '33333333-3333-4333-8333-333333333333', 'CLIENT', 0, '2026-10-25 11:00:00+03:00');
 
 INSERT INTO transfer (id, from_account_id, to_account_id, amount, idempotency_key, device_id, ip_address, created_at, updated_at) VALUES
-    (1, 1, 2, 100000, '10000000-0000-4000-8000-000000000001', NULL, NULL, '2026-10-25 12:00:00+03:00', '2026-10-25 12:00:00+03:00'),
+    (1, 1, 2, 100000, '10000000-0000-4000-8000-000000000001', NULL, NULL, '2026-10-25 12:00:00+03:00', '2026-10-25 12:00:00+03:00');
+
+INSERT INTO external_payment (id, transfer_id, amount, created_at, external_payment_id) VALUES
+    (1, 1, 100000, '2026-10-25 12:00:05+03:00', 'demo-payment-001');
+UPDATE account SET reserved_sum = 100000 WHERE id = 1;
+UPDATE transfer SET state = 'COMPLETING', updated_at = '2026-10-25 12:00:12+03:00'
+WHERE id = 1;
+
+COMMIT;
+
+BEGIN;
+
+UPDATE account SET balance = balance - 100000, reserved_sum = reserved_sum - 100000 WHERE id = 1;
+UPDATE account SET balance = balance + 100000 WHERE id = 2;
+INSERT INTO ledger_entry (id, transfer_id, account_id, amount, created_at) VALUES
+    (1, 1, 1, -100000, '2026-10-25 12:00:15+03:00'),
+    (2, 1, 2, 100000, '2026-10-25 12:00:15+03:00');
+UPDATE transfer SET state = 'COMPLETED', updated_at = '2026-10-25 12:00:15+03:00',
+    finished_at = '2026-10-25 12:00:15+03:00' WHERE id = 1;
+
+INSERT INTO transfer (id, from_account_id, to_account_id, amount, idempotency_key, device_id, ip_address, created_at, updated_at) VALUES
     (2, 2, 3, 1000, '10000000-0000-4000-8000-000000000002', 'alice-main', '203.0.113.10', '2026-10-26 09:00:00+03:00', '2026-10-26 09:00:00+03:00'),
     (3, 2, 4, 1200, '10000000-0000-4000-8000-000000000003', 'alice-main', '203.0.113.10', '2026-10-26 12:00:00+03:00', '2026-10-26 12:00:00+03:00'),
     (4, 2, 3, 900, '10000000-0000-4000-8000-000000000004', 'alice-main', '203.0.113.10', '2026-10-26 18:00:00+03:00', '2026-10-26 18:00:00+03:00'),
@@ -20,14 +40,9 @@ UPDATE transfer SET state = 'FRAUD_CHECK_PENDING', updated_at = created_at + int
 WHERE id BETWEEN 2 AND 8;
 
 UPDATE transfer SET state = 'COMPLETING', updated_at = created_at + interval '12 seconds'
-WHERE id BETWEEN 1 AND 6;
-
-INSERT INTO external_payment (id, transfer_id, amount, created_at, external_payment_id) VALUES
-    (1, 1, 100000, '2026-10-25 12:00:05+03:00', 'demo-payment-001');
+WHERE id BETWEEN 2 AND 6;
 
 INSERT INTO ledger_entry (id, transfer_id, account_id, amount, created_at) VALUES
-    (1, 1, 1, -100000, '2026-10-25 12:00:15+03:00'),
-    (2, 1, 2, 100000, '2026-10-25 12:00:15+03:00'),
     (3, 2, 2, -1000, '2026-10-26 09:00:15+03:00'),
     (4, 2, 3, 1000, '2026-10-26 09:00:15+03:00'),
     (5, 3, 2, -1200, '2026-10-26 12:00:15+03:00'),
@@ -35,12 +50,10 @@ INSERT INTO ledger_entry (id, transfer_id, account_id, amount, created_at) VALUE
     (7, 4, 2, -900, '2026-10-26 18:00:15+03:00'),
     (8, 4, 3, 900, '2026-10-26 18:00:15+03:00'),
     (9, 5, 2, -20000, '2026-10-27 10:00:15+03:00'),
-    (10, 5, 3, 20000, '2026-10-27 10:00:15+03:00'),
-    (11, 6, 2, -1000, '2026-10-27 10:00:45+03:00'),
-    (12, 6, 4, 1000, '2026-10-27 10:00:45+03:00');
+    (10, 5, 3, 20000, '2026-10-27 10:00:15+03:00');
 
 UPDATE transfer SET state = 'COMPLETED', finished_at = created_at + interval '15 seconds',
-    updated_at = created_at + interval '15 seconds' WHERE id BETWEEN 1 AND 6;
+    updated_at = created_at + interval '15 seconds' WHERE id BETWEEN 2 AND 5;
 
 UPDATE transfer SET state = 'RELEASING_FUNDS', reject_cause = 'ANTIFRAUD_REJECTED',
     updated_at = created_at + interval '12 seconds' WHERE id = 7;
@@ -49,9 +62,9 @@ UPDATE transfer SET state = 'REJECTED', finished_at = created_at + interval '15 
     updated_at = created_at + interval '15 seconds' WHERE id = 7;
 
 UPDATE account SET balance = 0, reserved_sum = 0 WHERE id = 1;
-UPDATE account SET balance = 75900, reserved_sum = 40000 WHERE id = 2;
+UPDATE account SET balance = 76900, reserved_sum = 41000 WHERE id = 2;
 UPDATE account SET balance = 21900, reserved_sum = 0 WHERE id = 3;
-UPDATE account SET balance = 2200, reserved_sum = 0 WHERE id = 4;
+UPDATE account SET balance = 1200, reserved_sum = 0 WHERE id = 4;
 
 INSERT INTO outbox_event (event_id, transfer_id, payload, created_at, published, attempt_count, next_attempt_at, published_at) VALUES
     ('01a176cb-5700-70ca-8000-0000000000ca', 2, '{"eventId":"01a176cb-5700-70ca-8000-0000000000ca","eventType":"TransferRequested","occurredAt":"2026-10-26T09:00:00+03:00","data":{"transferId":2,"fromAccountId":2,"toAccountId":3,"senderId":"11111111-1111-4111-8111-111111111111","recipientId":"22222222-2222-4222-8222-222222222222","amount":1000,"deviceId":"alice-main","ipAddress":"203.0.113.10","createdAt":"2026-10-26T09:00:00+03:00"}}'::jsonb, '2026-10-26 09:00:00+03:00', true, 1, '2026-10-26 09:00:00+03:00', '2026-10-26 09:00:01+03:00'),
@@ -81,5 +94,17 @@ SELECT setval('transfer_id_seq', (SELECT max(id) FROM transfer));
 SELECT setval('ledger_entry_id_seq', (SELECT max(id) FROM ledger_entry));
 SELECT setval('external_payment_id_seq', (SELECT max(id) FROM external_payment));
 SELECT setval('audit_log_id_seq', (SELECT max(id) FROM audit_log));
+
+COMMIT;
+
+BEGIN;
+
+UPDATE account SET balance = balance - 1000, reserved_sum = reserved_sum - 1000 WHERE id = 2;
+UPDATE account SET balance = balance + 1000 WHERE id = 4;
+INSERT INTO ledger_entry (transfer_id, account_id, amount, created_at) VALUES
+    (6, 2, -1000, '2026-10-27 10:00:45+03:00'),
+    (6, 4, 1000, '2026-10-27 10:00:45+03:00');
+UPDATE transfer SET state = 'COMPLETED', updated_at = '2026-10-27 10:00:45+03:00',
+    finished_at = '2026-10-27 10:00:45+03:00' WHERE id = 6;
 
 COMMIT;
