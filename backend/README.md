@@ -12,7 +12,7 @@
 
 ## Документация
 
-- [docs/srs](docs/srs/) — описание предметной области, требования и прецеденты
+- [docs/reports](docs/reports/) — отчеты по этапам работы
 - [docs/design-docs](docs/design-docs/) — дизайн-документы конкретных механик
 - [docs/data-models](docs/data-models/) — модели данных и обоснование индексов
 
