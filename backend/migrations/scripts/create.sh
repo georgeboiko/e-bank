@@ -1,6 +1,6 @@
 #!/bin/sh
 set -eu
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 . ../.env.test
 
 # Аргументы: пользователь, пароль, порт, имя БД, файлы структуры, операций и индексов.
@@ -16,6 +16,6 @@ SQL
         -v ON_ERROR_STOP=1 -f "$5" -f "$6" -f "$7"
 }
 
-create_database "$USER_DB_USER" "$USER_DB_PASSWORD" 5433 "$USER_DB_NAME" user.sql user_operations.sql user_indexes.sql
-create_database "$MONEY_DB_USER" "$MONEY_DB_PASSWORD" 5434 "$MONEY_DB_NAME" money.sql money_operations.sql money_indexes.sql
-create_database "$ANTIFRAUD_DB_USER" "$ANTIFRAUD_DB_PASSWORD" 5435 "$ANTIFRAUD_DB_NAME" antifraud.sql antifraud_operations.sql antifraud_indexes.sql
+create_database "$USER_DB_USER" "$USER_DB_PASSWORD" 5433 "$USER_DB_NAME" schema/user.sql schema/user_operations.sql schema/user_indexes.sql
+create_database "$MONEY_DB_USER" "$MONEY_DB_PASSWORD" 5434 "$MONEY_DB_NAME" schema/money.sql schema/money_operations.sql schema/money_indexes.sql
+create_database "$ANTIFRAUD_DB_USER" "$ANTIFRAUD_DB_PASSWORD" 5435 "$ANTIFRAUD_DB_NAME" schema/antifraud.sql schema/antifraud_operations.sql schema/antifraud_indexes.sql

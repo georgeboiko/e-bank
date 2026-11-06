@@ -102,7 +102,7 @@
 
 ## 4. Реализация PostgreSQL и целостность данных
 
-Структура реализована в [user.sql](../../migrations/user.sql), [money.sql](../../migrations/money.sql) и [antifraud.sql](../../migrations/antifraud.sql).
+Структура реализована в [user.sql](../../migrations/schema/user.sql), [money.sql](../../migrations/schema/money.sql) и [antifraud.sql](../../migrations/schema/antifraud.sql).
 
 ### Ограничения DDL
 
@@ -139,7 +139,7 @@
 
 ## 5. Создание, удаление БД и тестовые данные
 
-Для локального окружения подготовлен [docker-compose.yaml](../../migrations/docker-compose.yaml) с тремя экземплярами PostgreSQL 18 и отдельными volumes для данных.
+Для локального окружения подготовлен [docker-compose.yaml](../../docker-compose.yaml) с тремя экземплярами PostgreSQL 18 и отдельными volumes для данных.
 
 | Сервис | Адрес подключения |
 | --- | --- |
@@ -151,19 +151,19 @@
 
 | Скрипт | Назначение |
 | --- | --- |
-| [create.sh](../../migrations/create.sh) | Создаёт отсутствующие БД, затем выполняет файлы структуры, операций и индексов для каждого сервиса. |
-| [seed.sh](../../migrations/seed.sh) | Загружает `user_seed.sql`, `money_seed.sql`, `antifraud_seed.sql`. |
-| [drop.sh](../../migrations/drop.sh) | Удаляет три БД, указанные в `.env.test`. |
+| [create.sh](../../migrations/scripts/create.sh) | Создаёт отсутствующие БД, затем выполняет файлы структуры, операций и индексов для каждого сервиса. |
+| [seed.sh](../../migrations/scripts/seed.sh) | Загружает `user_seed.sql`, `money_seed.sql`, `antifraud_seed.sql`. |
+| [drop.sh](../../migrations/scripts/drop.sh) | Удаляет три БД, указанные в `.env.test`. |
 
 Для первоначальной подготовки нужны Docker Compose и клиент `psql`. Команды выполняются из каталога `backend`:
 
 ```sh
 docker compose --env-file .env.test up -d --wait
-./migrations/create.sh
-./migrations/seed.sh
+./migrations/scripts/create.sh
+./migrations/scripts/seed.sh
 ```
 
-Для удаления тестовых БД используется отдельная команда `./migrations/drop.sh`. Создание таблиц и загрузка тестовых данных рассчитаны на пустые БД, повторный запуск этих шагов поверх существующих данных не предусмотрен.
+Для удаления тестовых БД используется отдельная команда `./migrations/scripts/drop.sh`. Создание таблиц и загрузка тестовых данных рассчитаны на пустые БД, повторный запуск этих шагов поверх существующих данных не предусмотрен.
 
 ### Содержание тестового набора
 
@@ -176,7 +176,7 @@ docker compose --env-file .env.test up -d --wait
 
 ## 6. Функции и процедуры PL/pgSQL
 
-Реализация находится в [user_operations.sql](../../migrations/user_operations.sql), [money_operations.sql](../../migrations/money_operations.sql) и [antifraud_operations.sql](../../migrations/antifraud_operations.sql).
+Реализация находится в [user_operations.sql](../../migrations/schema/user_operations.sql), [money_operations.sql](../../migrations/schema/money_operations.sql) и [antifraud_operations.sql](../../migrations/schema/antifraud_operations.sql).
 
 | Операция | Прецедент | Действие |
 | --- | --- | --- |
@@ -207,7 +207,7 @@ docker compose --env-file .env.test up -d --wait
 
 ## 7. Индексы и связь с бизнес-процессами
 
-Подготовлено 19 дополнительных индексов: один в User, восемь в Money и десять в Antifraud. Файлы: [user_indexes.sql](../../migrations/user_indexes.sql), [money_indexes.sql](../../migrations/money_indexes.sql), [antifraud_indexes.sql](../../migrations/antifraud_indexes.sql).
+Подготовлено 19 дополнительных индексов: один в User, восемь в Money и десять в Antifraud. Файлы: [user_indexes.sql](../../migrations/schema/user_indexes.sql), [money_indexes.sql](../../migrations/schema/money_indexes.sql), [antifraud_indexes.sql](../../migrations/schema/antifraud_indexes.sql).
 
 | Индексы | Прецеденты и обоснование |
 | --- | --- |

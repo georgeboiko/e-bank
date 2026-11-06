@@ -12,7 +12,7 @@
 
 ## User
 
-[Определения индексов](../../migrations/user_indexes.sql), [запросы сравнения](../../migrations/user_indexes_explain.sql).
+[Определения индексов](../../migrations/schema/user_indexes.sql), [запросы сравнения](../../migrations/checks/user_indexes_explain.sql).
 
 | Индекс | Краткое обоснование | С индексом, мс | Без индекса, мс | Buffers: с / без |
 | --- | --- | ---: | ---: | ---: |
@@ -20,7 +20,7 @@
 
 ## Money
 
-[Определения индексов](../../migrations/money_indexes.sql), [запросы сравнения](../../migrations/money_indexes_explain.sql).
+[Определения индексов](../../migrations/schema/money_indexes.sql), [запросы сравнения](../../migrations/checks/money_indexes_explain.sql).
 
 | Индекс | Краткое обоснование | С индексом, мс | Без индекса, мс | Buffers: с / без |
 | --- | --- | ---: | ---: | ---: |
@@ -35,7 +35,7 @@
 
 ## Antifraud
 
-[Определения индексов](../../migrations/antifraud_indexes.sql), [запросы сравнения](../../migrations/antifraud_indexes_explain.sql).
+[Определения индексов](../../migrations/schema/antifraud_indexes.sql), [запросы сравнения](../../migrations/checks/antifraud_indexes_explain.sql).
 
 | Индекс | Краткое обоснование | С индексом, мс | Без индекса, мс | Buffers: с / без |
 | --- | --- | ---: | ---: | ---: |
