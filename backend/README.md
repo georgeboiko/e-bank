@@ -38,6 +38,25 @@
    ./migrations/seed.sh
    ```
 
+### Массовые данные для проверки индексов
+
+Обычный `seed.sh` загружает небольшой демонстрационный набор. Отдельные SQL-файлы создают большой набор через `generate_series`:
+
+| Файл | Дополнительные данные |
+| --- | --- |
+| `migrations/user_seed_large.sql` | 200 000 входов и 200 000 событий Outbox. |
+| `migrations/money_seed_large.sql` | 20 000 счетов, 100 000 переводов, 200 000 проводок и 100 000 внешних платежей. |
+| `migrations/antifraud_seed_large.sql` | 100 000 попыток и проверок, 800 000 результатов правил, 100 000 входов и 100 000 записей Inbox. |
+
+Выполнить один раз в тестовых БД после создания структуры. Если нужны обычные демонстрационные данные, загрузить их до массовых. Команды из каталога `backend`:
+
+```sh
+. ./.env.test
+PGPASSWORD="$USER_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5433 -U "$USER_DB_USER" -d "$USER_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/user_seed_large.sql
+PGPASSWORD="$MONEY_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5434 -U "$MONEY_DB_USER" -d "$MONEY_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/money_seed_large.sql
+PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_DB_USER" -d "$ANTIFRAUD_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/antifraud_seed_large.sql
+```
+
 БД доступны на `127.0.0.1`: User — порт `5433`, Money — `5434`, Antifraud — `5435`.
 
 `create.sh` и `seed.sh` предназначены для первоначальной инициализации пустых БД. При повторном запуске контейнеров данные сохраняются в Docker volumes; заново создавать таблицы и загружать тестовые данные не нужно.
