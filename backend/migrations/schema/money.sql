@@ -21,6 +21,14 @@ CREATE TABLE account (
     CHECK (state <> 'CLOSED' OR (balance = 0 AND reserved_sum = 0))
 );
 
+CREATE TABLE transfer_limits (
+    id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    daily_limit numeric(19,2) NOT NULL
+        CHECK (daily_limit > 0 AND daily_limit <> 'NaN'::numeric),
+    monthly_limit numeric(19,2) NOT NULL
+        CHECK (monthly_limit > 0 AND monthly_limit <> 'NaN'::numeric)
+);
+
 CREATE TABLE transfer (
     id serial PRIMARY KEY,
     from_account_id integer NOT NULL REFERENCES account(id),

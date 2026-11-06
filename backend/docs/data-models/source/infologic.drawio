@@ -301,6 +301,25 @@
             </Array>
           </mxGeometry>
         </mxCell>
+        <mxCell id="Money-transfer-limits" parent="1" style="shape=table;startSize=36;container=1;collapsible=0;childLayout=tableLayout;fixedRows=0;rowLines=0;fontStyle=1;align=center;resizeLast=1;html=1;fillColor=#FFFFFF;strokeColor=#111111;fontColor=#111111;fontSize=14;" value="Общие лимиты переводов" vertex="1">
+          <mxGeometry height="92" width="320" x="60" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-limits-attribute-1" parent="Money-transfer-limits" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-limits-attribute-1-text" parent="Money-transfer-limits-attribute-1" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Дневной лимит" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry">
+            <mxRectangle height="28" width="320" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Money-transfer-limits-attribute-2" parent="Money-transfer-limits" style="shape=tableRow;horizontal=0;startSize=0;swimlaneHead=0;swimlaneBody=0;fillColor=none;strokeColor=none;top=0;left=0;right=0;bottom=0;collapsible=0;dropTarget=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1">
+          <mxGeometry height="28" width="320" y="64" as="geometry" />
+        </mxCell>
+        <mxCell id="Money-transfer-limits-attribute-2-text" parent="Money-transfer-limits-attribute-2" style="shape=partialRectangle;html=1;whiteSpace=wrap;connectable=0;fillColor=none;strokeColor=none;fontColor=#111111;fontSize=14;fontStyle=0;align=left;verticalAlign=middle;spacingLeft=12;top=0;left=0;bottom=0;right=0;overflow=hidden;" value="Месячный лимит" vertex="1">
+          <mxGeometry height="28" width="320" as="geometry">
+            <mxRectangle height="28" width="320" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
