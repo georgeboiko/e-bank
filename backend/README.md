@@ -57,6 +57,19 @@ PGPASSWORD="$MONEY_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5434 -U "$MONEY_DB_USER"
 PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_DB_USER" -d "$ANTIFRAUD_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/antifraud_seed_large.sql
 ```
 
+### Сравнение запросов с индексами и без них
+
+После загрузки массовых данных выполнить команды из каталога `backend`:
+
+```sh
+. ./.env.test
+PGPASSWORD="$USER_DB_PASSWORD" psql -X -a -P pager=off -h 127.0.0.1 -p 5433 -U "$USER_DB_USER" -d "$USER_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/user_indexes_explain.sql
+PGPASSWORD="$MONEY_DB_PASSWORD" psql -X -a -P pager=off -h 127.0.0.1 -p 5434 -U "$MONEY_DB_USER" -d "$MONEY_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/money_indexes_explain.sql
+PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -a -P pager=off -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_DB_USER" -d "$ANTIFRAUD_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/antifraud_indexes_explain.sql
+```
+
+Файлы сравнивают все 19 добавленных индексов через `EXPLAIN ANALYZE`. Для каждого индекса выполняется запрос, затем индекс временно удаляется и повторяется тот же запрос. `ROLLBACK` восстанавливает индекс. Флаг `-a` выводит SQL и комментарии, чтобы было видно, к какому индексу относится план. Подробнее в [indexes.md](docs/data-models/indexes.md).
+
 БД доступны на `127.0.0.1`: User — порт `5433`, Money — `5434`, Antifraud — `5435`.
 
 `create.sh` и `seed.sh` предназначены для первоначальной инициализации пустых БД. При повторном запуске контейнеров данные сохраняются в Docker volumes; заново создавать таблицы и загружать тестовые данные не нужно.

@@ -12,45 +12,44 @@
 
 ## User
 
-| Индекс | Поля и условие | Прецедент и польза |
-| --- | --- | --- |
-| `outbox_event_pending_idx` | `(next_attempt_at, created_at) WHERE published = false` | UC-1: поиск готовых к отправке событий входа. Publisher выбирает записи, время очередной попытки которых уже наступило. Опубликованные события исключены. |
+[Определения индексов](../../migrations/user_indexes.sql), [запросы сравнения](../../migrations/user_indexes_explain.sql).
+
+| Индекс | Краткое обоснование | С индексом, мс | Без индекса, мс | Buffers: с / без |
+| --- | --- | ---: | ---: | ---: |
+| `outbox_event_pending_idx` | UC-1: очередь готовых к отправке событий входа; опубликованные исключены. | 1.728 | 163.625 | 102 / 2508 |
 
 ## Money
 
-| Индекс | Поля и условие | Прецедент и польза |
-| --- | --- | --- |
-| `account_owner_idx` | `(owner_id)` | UC-2, UC-4: получение всех счетов клиента и подсчёт их количества перед открытием нового счёта. |
-| `transfer_from_created_idx` | `(from_account_id, created_at DESC)` | UC-4: исходящие переводы выбранного счёта за период, последние операции в начале списка. |
-| `transfer_to_created_idx` | `(to_account_id, created_at DESC)` | UC-4: входящие переводы выбранного счёта, включая пополнения. |
-| `transfer_created_idx` | `(created_at)` | UC-7: выбор переводов за период без ограничения по одному счёту для подсчёта количества, сумм и распределения по статусам. |
-| `transfer_processing_idx` | `(id) WHERE state IN ('COMPLETING', 'RELEASING_FUNDS')` | UC-3, UC-8: воркер находит операции, для которых нужно вызвать `commit_transfer` или `release_funds`, в том числе после перезапуска сервиса. |
-| `ledger_entry_account_created_idx` | `(account_id, created_at DESC)` | UC-4: история проводок счёта за период. Имеющийся `UNIQUE (transfer_id, account_id)` обслуживает поиск по переводу, поэтому для истории по счёту нужен другой порядок полей. |
-| `audit_log_occurred_idx` | `(occurred_at DESC)` | UC-9: просмотр административных действий за период и последних записей аудита. |
-| `outbox_event_pending_idx` | `(next_attempt_at, created_at) WHERE published = false` | UC-3: выбор запросов на антифрод-проверку, готовых к первой или повторной отправке в Kafka. |
+[Определения индексов](../../migrations/money_indexes.sql), [запросы сравнения](../../migrations/money_indexes_explain.sql).
+
+| Индекс | Краткое обоснование | С индексом, мс | Без индекса, мс | Buffers: с / без |
+| --- | --- | ---: | ---: | ---: |
+| `account_owner_idx` | UC-2, UC-4: список счетов клиента и проверка их количества. | 0.278 | 12.380 | 4 / 205 |
+| `transfer_from_created_idx` | UC-4: исходящие переводы счёта за период. | 0.526 | 91.079 | 8 / 1639 |
+| `transfer_to_created_idx` | UC-4: входящие переводы счёта за период. | 0.464 | 92.477 | 8 / 1639 |
+| `transfer_created_idx` | UC-7: количество, суммы и статусы переводов за период по всем счетам. | 10.119 | 81.221 | 35 / 1639 |
+| `transfer_processing_idx` | UC-3, UC-8: очередь переводов в `COMPLETING` и `RELEASING_FUNDS` для воркера. | 1.702 | 90.024 | 52 / 958 |
+| `ledger_entry_account_created_idx` | UC-4: проводки конкретного счёта за период для выписки. | 0.715 | 112.517 | 13 / 1509 |
+| `audit_log_occurred_idx` | UC-9: общий журнал действий за период, последние записи первыми. | 1.189 | 73.347 | 4 / 1031 |
+| `outbox_event_pending_idx` | UC-3: готовые к отправке запросы на антифрод-проверку; опубликованные исключены. | 1.590 | 89.185 | 102 / 1236 |
 
 ## Antifraud
 
-| Индекс | Поля и условие | Прецедент и польза |
-| --- | --- | --- |
-| `bank_account_owner_idx` | `(owner_id)` | UC-5, UC-6: получение всех счетов клиента. Правила, определённые на уровне клиента, должны учитывать его попытки со всех счетов. |
-| `transfer_attempt_from_created_idx` | `(from_account_id, created_at DESC)` | R1, R2, R4, R7: исходящие попытки за период; история сумм; получатели; поиск следующего ребра при обходе графа. |
-| `transfer_attempt_to_created_idx` | `(to_account_id, created_at DESC)` | R5, R7: входящие попытки конкретного счёта и обход входящих рёбер графа. Владельцы счетов определяются через `bank_account`. |
-| `transfer_attempt_device_created_idx` | `(device, created_at DESC) WHERE device IS NOT NULL` | R6: попытки с одного устройства за сутки; после выборки подсчитываются разные владельцы счетов отправителей. Попытки без устройства в индекс не включены. |
-| `login_event_user_occurred_idx` | `(user_id, occurred_at DESC)` | R8: последний успешный вход клиента перед переводом в пределах двух часов. Координаты берутся из найденной записи. |
-| `antifraud_check_checked_idx` | `(checked_at)` | UC-7: статистика решений за период. Для статистики правил к выбранным проверкам присоединяются их `rule_evaluation`. |
-| `review_case_pending_idx` | `(created_at, id) WHERE status IN ('OPEN', 'IN_PROGRESS')` | UC-6: очередь незакрытых разборов от старых к новым. Закрытые карточки исключены. |
-| `audit_log_check_occurred_idx` | `(check_id, occurred_at DESC)` | UC-6: история действий по выбранной проверке, включая автоматический результат и решение аналитика. |
-| `audit_log_occurred_idx` | `(occurred_at DESC)` | UC-9: общий журнал действий за период, без ограничения одной проверкой. |
-| `outbox_event_pending_idx` | `(next_attempt_at, created_at) WHERE published = false` | UC-5, UC-6: отправка окончательных автоматических и ручных решений в Money. |
+[Определения индексов](../../migrations/antifraud_indexes.sql), [запросы сравнения](../../migrations/antifraud_indexes_explain.sql).
+
+| Индекс | Краткое обоснование | С индексом, мс | Без индекса, мс | Buffers: с / без |
+| --- | --- | ---: | ---: | ---: |
+| `bank_account_owner_idx` | UC-5, UC-6: все счета клиента для анализа его операций. | 0.270 | 11.325 | 3 / 128 |
+| `transfer_attempt_from_created_idx` | R1, R2, R4, R7: исходящие попытки, суммы, получатели и рёбра графа за период. | 0.499 | 77.640 | 8 / 1284 |
+| `transfer_attempt_to_created_idx` | R5, R7: входящие попытки счёта и входящие рёбра графа за период. | 0.540 | 76.248 | 8 / 1284 |
+| `transfer_attempt_device_created_idx` | R6: попытки с одного устройства за сутки для подсчёта разных клиентов. | 0.722 | 65.280 | 7 / 1287 |
+| `login_event_user_occurred_idx` | R8: последний успешный вход клиента за два часа перед переводом. | 0.294 | 59.034 | 4 / 934 |
+| `antifraud_check_checked_idx` | UC-7: статистика решений антифрода за период. | 8.429 | 58.877 | 21 / 736 |
+| `review_case_pending_idx` | UC-6: очередь незакрытых карточек по дате; закрытые исключены. | 0.554 | 1.439 | 12 / 11 |
+| `audit_log_check_occurred_idx` | UC-6: история действий по конкретной проверке. | 0.210 | 61.311 | 3 / 1032 |
+| `audit_log_occurred_idx` | UC-9: общий журнал действий за период. | 0.844 | 56.336 | 4 / 1032 |
+| `outbox_event_pending_idx` | UC-5, UC-6: очередь окончательных решений для Money; опубликованные исключены. | 1.100 | 78.174 | 102 / 1235 |
 
 ## Индексы, уже созданные ограничениями
 
-PostgreSQL автоматически создаёт уникальные B-tree-индексы для PRIMARY KEY и UNIQUE. Они уже входят в модель и повторно не создаются:
-
-- первичные ключи: поиск счетов, переводов, проверок, карточек и событий по ID;
-- Money: `transfer(idempotency_key)`, `inbox_event(transfer_id)`, `outbox_event(transfer_id)`, `external_payment(external_payment_id)` и `external_payment(transfer_id)` для повторных запросов и платежей;
-- Money: `ledger_entry(transfer_id, account_id)` для получения проводок перевода и проверки их целостности;
-- Antifraud: `user_device(user_id, device)`, `antifraud_check(transfer_id)`, `review_case(check_id)`, `outbox_event(check_id)` для связей между попыткой, проверкой, разбором и решением;
-- Antifraud: `rule_evaluation(check_id, rule_id)` для результатов восьми правил конкретной проверки и проверки итогового score;
-- User: `outbox_event(user_login_id)` для связи события с записью входа.
+`PRIMARY KEY` и `UNIQUE` уже создают индексы для поиска по ID, ключам идемпотентности, внешним платежам и уникальным связям. В частности, R3 использует `UNIQUE (user_id, device)`, результаты правил — PK `(check_id, rule_id)`. Эти индексы в сравнении не удалялись и дополнительно не дублируются.
