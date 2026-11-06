@@ -7,8 +7,6 @@ CREATE OR REPLACE FUNCTION create_transfer(
     p_amount numeric,
     p_idempotency_key uuid,
     p_event_id uuid,
-    p_daily_limit numeric,
-    p_monthly_limit numeric,
     p_device_id text DEFAULT NULL,
     p_ip_address inet DEFAULT NULL
 )
@@ -17,6 +15,7 @@ DECLARE
     sender account%ROWTYPE;
     recipient account%ROWTYPE;
     existing_transfer transfer%ROWTYPE;
+    configured_limits transfer_limits%ROWTYPE;
     transfer_id_created integer;
     operation_at timestamptz;
     day_start timestamptz;
@@ -31,13 +30,6 @@ BEGIN
     IF p_from_account_id = p_to_account_id THEN
         RAISE EXCEPTION 'Счета отправителя и получателя должны различаться';
     END IF;
-    IF p_daily_limit IS NULL OR p_daily_limit <= 0
-       OR p_daily_limit IN ('NaN'::numeric, 'Infinity'::numeric)
-       OR p_monthly_limit IS NULL OR p_monthly_limit <= 0
-       OR p_monthly_limit IN ('NaN'::numeric, 'Infinity'::numeric) THEN
-        RAISE EXCEPTION 'Дневной и месячный лимиты должны быть положительными конечными числами';
-    END IF;
-
     PERFORM id FROM account
     WHERE owner_id = p_actor_id OR id IN (p_from_account_id, p_to_account_id)
     ORDER BY id FOR UPDATE;
@@ -87,6 +79,11 @@ BEGIN
         RAISE EXCEPTION 'Недостаточно доступных средств';
     END IF;
 
+    SELECT * INTO configured_limits FROM transfer_limits WHERE id = 1;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Лимиты переводов не настроены';
+    END IF;
+
     day_start := date_trunc('day', operation_at AT TIME ZONE 'Europe/Moscow')
         AT TIME ZONE 'Europe/Moscow';
     month_start := date_trunc('month', operation_at AT TIME ZONE 'Europe/Moscow')
@@ -99,10 +96,10 @@ BEGIN
       AND t.created_at >= month_start AND t.created_at <= operation_at
       AND t.state IN ('FRAUD_CHECK_PENDING', 'COMPLETING', 'COMPLETED', 'RELEASING_FUNDS');
 
-    IF daily_used + p_amount > p_daily_limit THEN
+    IF daily_used + p_amount > configured_limits.daily_limit THEN
         RAISE EXCEPTION 'Превышен дневной лимит переводов';
     END IF;
-    IF monthly_used + p_amount > p_monthly_limit THEN
+    IF monthly_used + p_amount > configured_limits.monthly_limit THEN
         RAISE EXCEPTION 'Превышен месячный лимит переводов';
     END IF;
 

@@ -1,5 +1,8 @@
 BEGIN;
 
+INSERT INTO transfer_limits (daily_limit, monthly_limit)
+VALUES (100000.00, 1000000.00);
+
 INSERT INTO account (id, owner_id, type, balance, opened_at) VALUES
     (1, NULL, 'TECHNICAL', 0, '2026-10-25 11:00:00+03:00'),
     (2, '11111111-1111-4111-8111-111111111111', 'CLIENT', 0, '2026-10-25 11:00:00+03:00'),
