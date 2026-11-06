@@ -1,0 +1,53 @@
+services:
+  user-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${USER_DB_NAME:?}
+      POSTGRES_USER: ${USER_DB_USER:?}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD:?}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - user_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  money-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${MONEY_DB_NAME:?}
+      POSTGRES_USER: ${MONEY_DB_USER:?}
+      POSTGRES_PASSWORD: ${MONEY_DB_PASSWORD:?}
+    ports:
+      - "127.0.0.1:5434:5432"
+    volumes:
+      - money_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  antifraud-db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: ${ANTIFRAUD_DB_NAME:?}
+      POSTGRES_USER: ${ANTIFRAUD_DB_USER:?}
+      POSTGRES_PASSWORD: ${ANTIFRAUD_DB_PASSWORD:?}
+    ports:
+      - "127.0.0.1:5435:5432"
+    volumes:
+      - antifraud_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -h 127.0.0.1 -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  user_data:
+  money_data:
+  antifraud_data:
