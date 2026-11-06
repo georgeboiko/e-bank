@@ -12,6 +12,7 @@
 
 ## Документация
 
+- [docs/api](docs/api/) — HTTP-контракты OpenAPI и просмотр в Swagger UI
 - [docs/reports](docs/reports/) — отчеты по этапам работы
 - [docs/design-docs](docs/design-docs/) — дизайн-документы конкретных механик
 - [docs/data-models](docs/data-models/) — модели данных и обоснование индексов

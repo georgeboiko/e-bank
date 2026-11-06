@@ -1,0 +1,15 @@
+services:
+  swagger-ui:
+    image: swaggerapi/swagger-ui:latest
+    ports:
+      - "127.0.0.1:8090:8080"
+    environment:
+      SWAGGER_JSON: /specs/money.yaml
+      URLS: '[{"url":"/user.yaml","name":"User"},{"url":"/money.yaml","name":"Money"},{"url":"/antifraud.yaml","name":"Antifraud"}]'
+      URLS_PRIMARY_NAME: Money
+      VALIDATOR_URL: none
+      DISPLAY_OPERATION_ID: "true"
+      SHOW_EXTENSIONS: "true"
+      PERSIST_AUTHORIZATION: "false"
+    volumes:
+      - ./specs:/specs:ro

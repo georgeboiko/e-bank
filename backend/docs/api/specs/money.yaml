@@ -1,0 +1,1282 @@
+openapi: 3.0.3
+info:
+  title: E-Bank Money API
+  version: 1.0.0
+  description: 'Счета и денежные операции. CLIENT читает только собственные счета и переводы с участием своих
+    счетов; чужие объекты для CLIENT дают 404. ADMIN читает все объекты разрешённых методов. ownerId/userId
+    для выбора другого клиента разрешены только ADMIN. Деньги передаются десятичными строками, валюта RUB.
+    Создание перевода и пополнения требует Idempotency-Key. При точном повторе — 200 с актуальным ресурсом,
+    при несовпадении тела — 409. Смена сетевого IP не меняет идентичность запроса.
+
+
+    Контракт для последующей реализации на Go. Пользователь определяется из проверенного JWT. Роли операций
+    указаны в description и x-roles; это роли Keycloak, а не OAuth scopes. Формат времени — RFC 3339, ответы
+    в UTC. Периоды задаются как [from, to).'
+servers:
+- url: '{origin}/api/money/v1'
+  variables:
+    origin:
+      default: http://localhost
+      description: Внешний адрес Nginx со схемой и портом, без завершающего слеша.
+tags:
+- name: Accounts
+- name: Transfers
+- name: Topups
+- name: Limits
+- name: Analytics
+- name: Audit
+- name: Health
+security:
+- bearerAuth: []
+paths:
+  /accounts:
+    post:
+      operationId: moneyCreateAccount
+      tags:
+      - Accounts
+      summary: Открыть клиентский счёт
+      description: 'Роли: CLIENT.
+
+
+        Создаётся ACTIVE-счёт с нулевым балансом. ownerId берётся из sub; тип CLIENT. Проверяется допустимое
+        количество счетов клиента; при превышении — 409 ACCOUNT_LIMIT_REACHED. Действие записывается в аудит.'
+      x-roles:
+      - CLIENT
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '201':
+          description: Счёт создан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: 2
+                ownerId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+                type: CLIENT
+                state: ACTIVE
+                balance: '0.00'
+                reservedSum: '0.00'
+                availableBalance: '0.00'
+                openedAt: '2026-11-06T12:00:00Z'
+          headers:
+            Location:
+              description: URI созданного ресурса.
+              schema:
+                type: string
+                example: /api/money/v1/accounts/2
+    get:
+      operationId: moneyListAccounts
+      tags:
+      - Accounts
+      summary: Список счетов
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        CLIENT получает только свои клиентские счета. ownerId доступен только ADMIN; его передача CLIENT даёт
+        403. ADMIN может просматривать технические счета. Сортировка openedAt DESC, id DESC.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница счетов.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountPage'
+      parameters:
+      - name: state
+        in: query
+        description: Состояние счёта.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/AccountState
+      - name: ownerId
+        in: query
+        description: Владелец, только ADMIN.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/UserId
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /accounts/{accountId}:
+    parameters:
+    - name: accountId
+      in: path
+      description: ID счёта.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: moneyGetAccount
+      tags:
+      - Accounts
+      summary: Получить счёт
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        CLIENT — только собственный клиентский счёт; чужой объект даёт 404.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Счёт.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+  /accounts/{accountId}/state:
+    parameters:
+    - name: accountId
+      in: path
+      description: ID счёта.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    patch:
+      operationId: moneySetAccountState
+      tags:
+      - Accounts
+      summary: Изменить состояние счёта
+      description: 'Роли: ADMIN.
+
+
+        Изменение состояния и аудит выполняются одной транзакцией. CLOSED требует нулевых баланса и резерва;
+        переоткрытие CLOSED запрещено. Конфликт даёт 409.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Новое состояние счёта.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+              example:
+                id: 2
+                ownerId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+                type: CLIENT
+                state: BLOCKED
+                balance: '75000.00'
+                reservedSum: '10000.00'
+                availableBalance: '65000.00'
+                openedAt: '2026-11-01T10:00:00Z'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetAccountStateRequest'
+  /accounts/{accountId}/ledger:
+    parameters:
+    - name: accountId
+      in: path
+      description: ID счёта.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: moneyListLedger
+      tags:
+      - Accounts
+      summary: История проводок счёта
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        CLIENT — только свой счёт. Сортировка createdAt DESC, id DESC.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Проводки.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerPage'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /transfers:
+    post:
+      operationId: moneyCreateTransfer
+      tags:
+      - Transfers
+      summary: Создать перевод
+      description: 'Роли: CLIENT.
+
+
+        Проверяются владение счётом отправителя, состояния, остаток и лимиты.
+        Создание, резерв и Outbox фиксируются одной транзакцией. Повтор того же
+        тела с тем же ключом возвращает 200 и актуальный ресурс; другое тело — 409 IDEMPOTENCY_CONFLICT.'
+      x-roles:
+      - CLIENT
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '202':
+          description: Запрос принят, резерв и запрос антифрода сохранены.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+              example:
+                id: 123
+                type: TRANSFER
+                fromAccountId: 2
+                toAccountId: 3
+                amount: '1000.00'
+                state: FRAUD_CHECK_PENDING
+                rejectCause: null
+                createdAt: '2026-11-06T12:00:00Z'
+                updatedAt: '2026-11-06T12:00:00Z'
+                finishedAt: null
+          headers:
+            Location:
+              description: URI созданного ресурса.
+              schema:
+                type: string
+                example: /api/money/v1/transfers/123
+        '200':
+          description: 'Идемпотентный повтор: существующая операция.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+              example:
+                id: 123
+                type: TRANSFER
+                fromAccountId: 2
+                toAccountId: 3
+                amount: '1000.00'
+                state: COMPLETED
+                rejectCause: null
+                createdAt: '2026-11-06T12:00:00Z'
+                updatedAt: '2026-11-06T12:00:05Z'
+                finishedAt: '2026-11-06T12:00:05Z'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransferRequest'
+    get:
+      operationId: moneyListTransfers
+      tags:
+      - Transfers
+      summary: История переводов и пополнений
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        CLIENT видит операции, в которых участвует хотя бы один его счёт. ADMIN видит все. direction требует
+        accountId. userId доступен только ADMIN. Чужой accountId для CLIENT даёт 404. Сортировка createdAt
+        DESC, id DESC. minAmount <= maxAmount; from < to.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница операций.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferPage'
+      parameters:
+      - name: accountId
+        in: query
+        description: Участвующий счёт.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - name: userId
+        in: query
+        description: Участник-клиент, только ADMIN.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/UserId
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - name: state
+        in: query
+        description: Состояние.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/TransferState
+      - name: type
+        in: query
+        description: Перевод или пополнение.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/TransferType
+      - name: direction
+        in: query
+        description: Направление относительно accountId.
+        required: false
+        schema:
+          type: string
+          enum:
+          - INCOMING
+          - OUTGOING
+      - name: minAmount
+        in: query
+        description: Минимальная сумма включительно.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/Money
+      - name: maxAmount
+        in: query
+        description: Максимальная сумма включительно.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/Money
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /transfers/{transferId}:
+    parameters:
+    - name: transferId
+      in: path
+      description: ID денежной операции.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: moneyGetTransfer
+      tags:
+      - Transfers
+      summary: Получить состояние перевода
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        CLIENT — участник через свой счёт. REJECTED возвращается как 200 с состоянием операции. Для пополнения
+        также доступно обычное представление Transfer с type=TOPUP.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Актуальное состояние.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+  /topups:
+    post:
+      operationId: moneyCreateTopup
+      tags:
+      - Topups
+      summary: Создать пополнение и внешний платёж
+      description: 'Роли: CLIENT.
+
+
+        Заявка сохраняется через create_topup; вызов платёжного провайдера выполняется вне транзакции PostgreSQL,
+        затем платёж привязывается через register_topup_payment. Баланс пока не меняется. При временной ошибке
+        может сохраниться PENDING-заявка: повтор с тем же ключом продолжает её подготовку, не создавая второй
+        заявки или внешнего платежа. return URL задаётся конфигурацией.'
+      x-roles:
+      - CLIENT
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '201':
+          description: Заявка создана.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topup'
+              example:
+                id: 124
+                accountId: 2
+                amount: '5000.00'
+                state: PENDING
+                confirmationUrl: https://payment.example/confirmation/124
+                createdAt: '2026-11-06T12:10:00Z'
+                updatedAt: '2026-11-06T12:10:00Z'
+                finishedAt: null
+          headers:
+            Location:
+              description: URI созданного ресурса.
+              schema:
+                type: string
+                example: /api/money/v1/topups/124
+        '200':
+          description: Существующая заявка при повторе.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topup'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/IdempotencyKey
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTopupRequest'
+  /topups/{topupId}:
+    parameters:
+    - name: topupId
+      in: path
+      description: ID пополнения; совпадает с transfer.id.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: moneyGetTopup
+      tags:
+      - Topups
+      summary: Получить пополнение
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        CLIENT — владелец счёта. Чтение не подтверждает оплату и не проводит деньги. confirmationUrl формируется
+        сервисом из данных провайдера/сохранённого контекста и может быть null.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Текущее состояние.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topup'
+  /topups/{topupId}/refresh:
+    parameters:
+    - name: topupId
+      in: path
+      description: ID пополнения; совпадает с transfer.id.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    post:
+      operationId: moneyRefreshTopup
+      tags:
+      - Topups
+      summary: Проверить внешний платёж и обновить заявку
+      description: 'Роли: CLIENT.
+
+
+        Только владелец счёта. Money сам запрашивает провайдера. succeeded после проверки ID, суммы и RUB вызывает
+        confirm_topup и сохраняет COMPLETING; canceled вызывает cancel_topup. Затем воркер отдельно выполняет
+        commit_transfer. Повторная проверка не создаёт проводки заново. 200 означает проверку, результат зачисления
+        определяется state. Терминальное состояние можно вернуть без нового внешнего вызова.'
+      x-roles:
+      - CLIENT
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Состояние после проверки.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Topup'
+              example:
+                id: 124
+                accountId: 2
+                amount: '5000.00'
+                state: COMPLETING
+                confirmationUrl: null
+                createdAt: '2026-11-06T12:10:00Z'
+                updatedAt: '2026-11-06T12:11:00Z'
+                finishedAt: null
+  /limits:
+    get:
+      operationId: moneyGetLimits
+      tags:
+      - Limits
+      summary: Получить общие лимиты переводов
+      description: 'Роли: CLIENT, ADMIN.
+
+
+        Настройки строки transfer_limits с id=1. Значения одинаковы для клиентов; расход считается отдельно.
+        Отсутствие настройки — ошибка LIMITS_NOT_CONFIGURED.'
+      x-roles:
+      - CLIENT
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Лимиты.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferLimits'
+    put:
+      operationId: moneySetLimits
+      tags:
+      - Limits
+      summary: Изменить общие лимиты переводов
+      description: 'Роли: ADMIN.
+
+
+        Полная замена двух значений. Обновление transfer_limits и LIMIT_CHANGED с sub администратора выполняются
+        одной транзакцией. Действующие переводы не пересчитываются; новые используют новые значения.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Сохранённые лимиты.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferLimits'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferLimits'
+  /limits/usage:
+    get:
+      operationId: moneyGetLimitUsage
+      tags:
+      - Limits
+      summary: Получить расход лимитов текущего клиента
+      description: 'Роли: CLIENT.
+
+
+        Периоды рассчитываются в Europe/Moscow по всем счетам клиента. Это снимок состояния; create_transfer
+        повторно проверяет лимит внутри транзакции.'
+      x-roles:
+      - CLIENT
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Расход и остатки лимитов.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LimitUsage'
+  /analytics:
+    get:
+      operationId: moneyGetAnalytics
+      tags:
+      - Analytics
+      summary: Финансовая аналитика
+      description: 'Роли: ADMIN.
+
+
+        Период не более 31 суток; определения временных баз показателей приведены в MoneyAnalytics.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Аналитика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyAnalytics'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/FromRequired
+      - $ref: ./common.yaml#/components/parameters/ToRequired
+  /audit:
+    get:
+      operationId: moneyListAudit
+      tags:
+      - Audit
+      summary: Аудит денежных и административных действий
+      description: 'Роли: ADMIN.
+
+
+        Сортировка occurredAt DESC, id DESC. Набор действий должен покрывать счета, лимиты и переходы переводов.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница аудита.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - $ref: ./common.yaml#/components/parameters/ActorId
+      - name: accountId
+        in: query
+        description: Связанный счёт.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - $ref: ./common.yaml#/components/parameters/Action
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /health:
+    get:
+      operationId: moneyHealth
+      tags:
+      - Health
+      summary: Проверка состояния сервиса и БД
+      description: Проверяет доступность БД. Внутренний endpoint сервиса; публичная маршрутизация через Nginx не требуется.
+      security: []
+      x-internal: true
+      servers:
+      - url: '{serviceOrigin}'
+        variables:
+          serviceOrigin:
+            default: http://localhost
+            description: Прямой внутренний HTTP-адрес этого сервиса, без API-префикса.
+      responses:
+        '200':
+          description: Сервис и БД доступны.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Health
+              example:
+                status: UP
+        '503':
+          description: БД недоступна.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Health
+              example:
+                status: DOWN
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: ./common.yaml#/components/securitySchemes/bearerAuth
+  schemas:
+    Account:
+      type: object
+      required:
+      - id
+      - ownerId
+      - type
+      - state
+      - balance
+      - reservedSum
+      - availableBalance
+      - openedAt
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        ownerId:
+          $ref: ./common.yaml#/components/schemas/NullableUserId
+        type:
+          type: string
+          enum:
+          - CLIENT
+          - TECHNICAL
+        state:
+          $ref: ./common.yaml#/components/schemas/AccountState
+        balance:
+          $ref: ./common.yaml#/components/schemas/SignedMoney
+        reservedSum:
+          $ref: ./common.yaml#/components/schemas/Money
+        availableBalance:
+          $ref: ./common.yaml#/components/schemas/SignedMoney
+        openedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+      description: availableBalance = balance - reservedSum. Для CLIENT баланс и доступный остаток неотрицательны.
+        У TECHNICAL ownerId=null, reservedSum=0, баланс может быть отрицательным.
+      example:
+        id: 2
+        ownerId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        type: CLIENT
+        state: ACTIVE
+        balance: '75000.00'
+        reservedSum: '10000.00'
+        availableBalance: '65000.00'
+        openedAt: '2026-11-01T10:00:00Z'
+    SetAccountStateRequest:
+      type: object
+      required:
+      - state
+      properties:
+        state:
+          $ref: ./common.yaml#/components/schemas/AccountState
+      additionalProperties: false
+      description: CLOSED требует нулевого баланса и резерва; закрытый счёт повторно не открывается.
+    LedgerEntry:
+      type: object
+      required:
+      - id
+      - transferId
+      - accountId
+      - amount
+      - createdAt
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        transferId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        accountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        amount:
+          type: string
+          pattern: ^-?(0\.(0[1-9]|[1-9][0-9])|[1-9][0-9]{0,16}\.[0-9]{2})$
+          example: '-1000.00'
+        createdAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+      example:
+        id: 100
+        transferId: 123
+        accountId: 2
+        amount: '-1000.00'
+        createdAt: '2026-11-06T12:00:05Z'
+    CreateTransferRequest:
+      type: object
+      required:
+      - fromAccountId
+      - toAccountId
+      - amount
+      properties:
+        fromAccountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        toAccountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        amount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        deviceId:
+          $ref: ./common.yaml#/components/schemas/NullableDeviceId
+      additionalProperties: false
+      description: Счета должны различаться. Владелец отправителя определяется по JWT. IP, владельцы счетов
+        и лимиты клиентом не задаются.
+      example:
+        fromAccountId: 2
+        toAccountId: 3
+        amount: '1000.00'
+        deviceId: alice-main
+    Transfer:
+      type: object
+      required:
+      - id
+      - type
+      - fromAccountId
+      - toAccountId
+      - amount
+      - state
+      - rejectCause
+      - createdAt
+      - updatedAt
+      - finishedAt
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        type:
+          $ref: ./common.yaml#/components/schemas/TransferType
+        fromAccountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        toAccountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        amount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        state:
+          $ref: ./common.yaml#/components/schemas/TransferState
+        rejectCause:
+          type: string
+          enum:
+          - ANTIFRAUD_REJECTED
+          - null
+          nullable: true
+        createdAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        updatedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        finishedAt:
+          $ref: ./common.yaml#/components/schemas/NullableDateTime
+      description: finishedAt заполнен только в COMPLETED, REJECTED, CANCELLED. RELEASING_FUNDS и REJECTED
+        имеют rejectCause=ANTIFRAUD_REJECTED. Risk score и причины отдельных правил клиенту Money не раскрываются.
+      example:
+        id: 123
+        type: TRANSFER
+        fromAccountId: 2
+        toAccountId: 3
+        amount: '1000.00'
+        state: FRAUD_CHECK_PENDING
+        rejectCause: null
+        createdAt: '2026-11-06T12:00:00Z'
+        updatedAt: '2026-11-06T12:00:00Z'
+        finishedAt: null
+    CreateTopupRequest:
+      type: object
+      required:
+      - accountId
+      - amount
+      properties:
+        accountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        amount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+      additionalProperties: false
+      example:
+        accountId: 2
+        amount: '5000.00'
+    Topup:
+      type: object
+      required:
+      - id
+      - accountId
+      - amount
+      - state
+      - confirmationUrl
+      - createdAt
+      - updatedAt
+      - finishedAt
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        accountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        amount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        state:
+          type: string
+          enum:
+          - PENDING
+          - COMPLETING
+          - COMPLETED
+          - CANCELLED
+        confirmationUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: Может отсутствовать как значение null, когда оплата не требуется или URL ещё недоступен.
+        createdAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        updatedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        finishedAt:
+          $ref: ./common.yaml#/components/schemas/NullableDateTime
+      description: id совпадает с ID transfer в Money. Адрес возврата клиента задаётся конфигурацией сервиса.
+      example:
+        id: 124
+        accountId: 2
+        amount: '5000.00'
+        state: PENDING
+        confirmationUrl: https://payment.example/confirmation/124
+        createdAt: '2026-11-06T12:10:00Z'
+        updatedAt: '2026-11-06T12:10:00Z'
+        finishedAt: null
+    TransferLimits:
+      type: object
+      required:
+      - dailyLimit
+      - monthlyLimit
+      properties:
+        dailyLimit:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        monthlyLimit:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+      additionalProperties: false
+      description: Одна общая настройка для всех клиентов; расход считается отдельно по каждому клиенту.
+      example:
+        dailyLimit: '100000.00'
+        monthlyLimit: '1000000.00'
+    LimitPeriodUsage:
+      type: object
+      required:
+      - limit
+      - used
+      - remaining
+      - resetsAt
+      properties:
+        limit:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        used:
+          $ref: ./common.yaml#/components/schemas/Money
+        remaining:
+          $ref: ./common.yaml#/components/schemas/Money
+        resetsAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+      description: remaining = max(0, limit - used).
+    LimitUsage:
+      type: object
+      required:
+      - timeZone
+      - daily
+      - monthly
+      properties:
+        timeZone:
+          type: string
+          enum:
+          - Europe/Moscow
+        daily:
+          $ref: '#/components/schemas/LimitPeriodUsage'
+        monthly:
+          $ref: '#/components/schemas/LimitPeriodUsage'
+      description: По всем счетам текущего клиента. Учитываются FRAUD_CHECK_PENDING, COMPLETING, COMPLETED
+        и RELEASING_FUNDS.
+      example:
+        timeZone: Europe/Moscow
+        daily:
+          limit: '100000.00'
+          used: '15000.00'
+          remaining: '85000.00'
+          resetsAt: '2026-11-06T21:00:00Z'
+        monthly:
+          limit: '1000000.00'
+          used: '150000.00'
+          remaining: '850000.00'
+          resetsAt: '2026-11-30T21:00:00Z'
+    TransferStateCounts:
+      type: object
+      required:
+      - PENDING
+      - FRAUD_CHECK_PENDING
+      - COMPLETING
+      - RELEASING_FUNDS
+      - COMPLETED
+      - REJECTED
+      - CANCELLED
+      properties:
+        PENDING:
+          type: integer
+          format: int64
+          minimum: 0
+        FRAUD_CHECK_PENDING:
+          type: integer
+          format: int64
+          minimum: 0
+        COMPLETING:
+          type: integer
+          format: int64
+          minimum: 0
+        RELEASING_FUNDS:
+          type: integer
+          format: int64
+          minimum: 0
+        COMPLETED:
+          type: integer
+          format: int64
+          minimum: 0
+        REJECTED:
+          type: integer
+          format: int64
+          minimum: 0
+        CANCELLED:
+          type: integer
+          format: int64
+          minimum: 0
+    MoneyAnalytics:
+      type: object
+      required:
+      - from
+      - to
+      - createdTransferCount
+      - transfersByState
+      - completedShare
+      - rejectedShare
+      - turnover
+      - topupTurnover
+      - accountsByState
+      properties:
+        from:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        to:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        createdTransferCount:
+          type: integer
+          format: int64
+          minimum: 0
+        transfersByState:
+          $ref: '#/components/schemas/TransferStateCounts'
+        completedShare:
+          type: number
+          minimum: 0
+          maximum: 1
+        rejectedShare:
+          type: number
+          minimum: 0
+          maximum: 1
+        turnover:
+          $ref: ./common.yaml#/components/schemas/MoneyTotal
+        topupTurnover:
+          $ref: ./common.yaml#/components/schemas/MoneyTotal
+        accountsByState:
+          type: object
+          required:
+          - ACTIVE
+          - BLOCKED
+          - CLOSED
+          properties:
+            ACTIVE:
+              type: integer
+              format: int64
+              minimum: 0
+            BLOCKED:
+              type: integer
+              format: int64
+              minimum: 0
+            CLOSED:
+              type: integer
+              format: int64
+              minimum: 0
+      description: createdTransferCount, transfersByState и доли относятся к операциям, созданным за [from,to),
+        с их текущими статусами; при пустой выборке доли равны 0. turnover — сумма COMPLETED с finishedAt в
+        периоде, каждая операция учитывается один раз. topupTurnover — часть этого оборота. accountsByState
+        отражает текущее состояние клиентских счетов.
+      example:
+        from: '2026-11-01T00:00:00Z'
+        to: '2026-11-07T00:00:00Z'
+        createdTransferCount: 8
+        transfersByState:
+          PENDING: 0
+          FRAUD_CHECK_PENDING: 1
+          COMPLETING: 0
+          RELEASING_FUNDS: 0
+          COMPLETED: 6
+          REJECTED: 1
+          CANCELLED: 0
+        completedShare: 0.75
+        rejectedShare: 0.125
+        turnover: '124100.00'
+        topupTurnover: '100000.00'
+        accountsByState:
+          ACTIVE: 3
+          BLOCKED: 0
+          CLOSED: 0
+    AccountPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    TransferPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    LedgerPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerEntry'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    AuditPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: ./common.yaml#/components/schemas/AuditEvent
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false

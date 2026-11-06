@@ -1,0 +1,2528 @@
+openapi: 3.0.3
+info:
+  title: E-Bank Antifraud API
+  version: 1.0.0
+  description: 'Автоматические проверки запускаются событиями Kafka. HTTP API предназначен для просмотра и
+    ручного рассмотрения. Клиентам банка он недоступен. Результаты завершённых проверок неизменяемы. Изменения
+    правил сохраняются в конфигурации сервиса и аудите; механизм сохранения конфигурации после перезапуска
+    должен быть определён при реализации. Границы решений и формула score фиксированы SQL этапа 2.
+
+
+    Контракт для последующей реализации на Go. Пользователь определяется из проверенного JWT. Роли операций
+    указаны в description и x-roles; это роли Keycloak, а не OAuth scopes. Формат времени — RFC 3339, ответы
+    в UTC. Периоды задаются как [from, to).'
+servers:
+- url: '{origin}/api/antifraud/v1'
+  variables:
+    origin:
+      default: http://localhost
+      description: Внешний адрес Nginx со схемой и портом, без завершающего слеша.
+tags:
+- name: Checks
+- name: Reviews
+- name: Graph
+- name: Rules
+- name: Analytics
+- name: Audit
+- name: Health
+security:
+- bearerAuth: []
+paths:
+  /checks:
+    get:
+      operationId: antifraudListChecks
+      tags:
+      - Checks
+      summary: История антифрод-проверок
+      description: 'Роли: ANALYST, ADMIN.
+
+
+        userId — любой участник через владельца счёта. Период задаётся по checkedAt. minScore <= maxScore,
+        from < to. Сортировка checkedAt DESC, id DESC.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница проверок.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckPage'
+      parameters:
+      - name: transferId
+        in: query
+        description: ID перевода Money.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - name: userId
+        in: query
+        description: Клиент-участник.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/UserId
+      - name: fromAccountId
+        in: query
+        description: Счёт отправителя.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - name: toAccountId
+        in: query
+        description: Счёт получателя.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - name: automaticDecision
+        in: query
+        description: Автоматическое решение.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/AutomaticDecision
+      - name: minScore
+        in: query
+        description: Минимальный score включительно.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 100
+      - name: maxScore
+        in: query
+        description: Максимальный score включительно.
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 100
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /checks/{checkId}:
+    parameters:
+    - name: checkId
+      in: path
+      description: ID проверки Antifraud, не transferId.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: antifraudGetCheck
+      tags:
+      - Checks
+      summary: Полная проверка с восемью результатами правил
+      description: 'Роли: ANALYST, ADMIN.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Проверка.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Check'
+  /checks/{checkId}/audit:
+    parameters:
+    - name: checkId
+      in: path
+      description: ID проверки Antifraud, не transferId.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: antifraudListCheckAudit
+      tags:
+      - Audit
+      summary: История действий по проверке
+      description: 'Роли: ANALYST, ADMIN.
+
+
+        Сортировка occurredAt DESC, id DESC.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Аудит выбранной проверки.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /review-cases:
+    get:
+      operationId: antifraudListReviewCases
+      tags:
+      - Reviews
+      summary: Очередь ручных рассмотрений
+      description: 'Роли: ANALYST, ADMIN.
+
+
+        По умолчанию только OPEN и IN_PROGRESS. Явный status позволяет просматривать закрытые карточки. Сортировка
+        createdAt ASC, id ASC; период относится к createdAt.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница карточек.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewPage'
+      parameters:
+      - name: status
+        in: query
+        description: Статус; при отсутствии — все незакрытые.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/ReviewStatus
+      - name: analystId
+        in: query
+        description: Назначенный аналитик.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/UserId
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /review-cases/{caseId}:
+    parameters:
+    - name: caseId
+      in: path
+      description: ID карточки ручного рассмотрения.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    get:
+      operationId: antifraudGetReviewCase
+      tags:
+      - Reviews
+      summary: Получить карточку ручного рассмотрения
+      description: 'Роли: ANALYST, ADMIN.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Карточка.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewCase'
+  /review-cases/{caseId}/claim:
+    parameters:
+    - name: caseId
+      in: path
+      description: ID карточки ручного рассмотрения.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    post:
+      operationId: antifraudClaimReviewCase
+      tags:
+      - Reviews
+      summary: Взять карточку в работу
+      description: 'Роли: ANALYST.
+
+
+        Назначает текущего аналитика из JWT и меняет OPEN на IN_PROGRESS. Повтор тем же аналитиком для IN_PROGRESS
+        возвращает ту же карточку. Другой исполнитель — 409 CASE_ALREADY_ASSIGNED; закрытая карточка — 409
+        CASE_CLOSED. Назначение и аудит фиксируются одной транзакцией.'
+      x-roles:
+      - ANALYST
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Карточка назначена текущему аналитику.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewCase'
+              example:
+                id: 1
+                checkId: 5
+                transferId: 5
+                analystId: cccccccc-cccc-cccc-cccc-cccccccccccc
+                status: IN_PROGRESS
+                decision: null
+                comment: null
+                createdAt: '2026-11-06T12:00:02Z'
+                decidedAt: null
+  /review-cases/{caseId}/decision:
+    parameters:
+    - name: caseId
+      in: path
+      description: ID карточки ручного рассмотрения.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/EntityId
+    post:
+      operationId: antifraudResolveReviewCase
+      tags:
+      - Reviews
+      summary: Принять окончательное решение
+      description: 'Роли: ANALYST.
+
+
+        Текущий исполнитель может принять решение; свободная OPEN-карточка
+        назначается принимающему решение аналитику. чужое назначение — 409 CASE_ALREADY_ASSIGNED. Точный повтор
+        закрытого решения тем же аналитиком возвращает 200; другое решение или комментарий — 409 CASE_CLOSED.
+        Решение, аудит и Outbox фиксируются одной транзакцией. Перевод проводит Money асинхронно.'
+      x-roles:
+      - ANALYST
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Закрытая карточка.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewCase'
+              example:
+                id: 1
+                checkId: 5
+                transferId: 5
+                analystId: cccccccc-cccc-cccc-cccc-cccccccccccc
+                status: CLOSED
+                decision: APPROVED
+                comment: Операция проверена.
+                createdAt: '2026-11-06T12:00:02Z'
+                decidedAt: '2026-11-06T12:01:00Z'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewDecisionRequest'
+  /graph:
+    get:
+      operationId: antifraudGetGraph
+      tags:
+      - Graph
+      summary: Ограниченный подграф связей
+      description: 'Роли: ANALYST, ADMIN.
+
+
+        Задать ровно один вариант корня: checkId ИЛИ пару rootType/rootId. from и to задаются вместе, from
+        < to, период не более 31 суток. Без периода для checkId выбирается час перед попыткой до её времени
+        включительно; для явного корня — последние 24 часа. Для явного периода используется [from,to). depth
+        — максимум переходов от корня, limit ограничивает вершины. Связи использования агрегируются по событиям
+        выбранного окна, а не по одному lastSeenAt. Для OWNS используется проекция владельца счёта.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Подграф.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Graph'
+      parameters:
+      - name: checkId
+        in: query
+        description: Корень по проверке; исключает rootType/rootId.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - name: rootType
+        in: query
+        description: Тип явного корня.
+        required: false
+        schema:
+          type: string
+          enum:
+          - USER
+          - BANK_ACCOUNT
+          - DEVICE
+          - IP_ADDRESS
+      - name: rootId
+        in: query
+        description: Значение идентификатора без пространства имён; для BANK_ACCOUNT — десятичный ID.
+        required: false
+        schema:
+          type: string
+          minLength: 1
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - name: depth
+        in: query
+        description: Максимальная глубина.
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 4
+          default: 2
+      - name: limit
+        in: query
+        description: Максимальное число вершин.
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 500
+          default: 100
+  /rules:
+    get:
+      operationId: antifraudListRules
+      tags:
+      - Rules
+      summary: Получить текущую конфигурацию восьми правил
+      description: 'Роли: ANALYST, ADMIN.
+
+
+        Ровно по одному правилу 1..8, в порядке ruleId. Источник — конфигурация приложения.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Текущие правила.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RuleConfig'
+                minItems: 8
+                maxItems: 8
+              example:
+              - ruleId: 1
+                name: Частые попытки
+                enabled: true
+                points:
+                  weak: 15
+                  strong: 30
+                parameters:
+                  shortWindowSeconds: 120
+                  shortCount: 3
+                  longWindowSeconds: 600
+                  longCount: 6
+              - ruleId: 2
+                name: Необычная сумма
+                enabled: true
+                points:
+                  weak: 15
+                  strong: 30
+                parameters:
+                  historyDays: 30
+                  weakMinAmount: '2000.00'
+                  weakMedianFactor: 3
+                  weakMadFactor: 4
+                  strongMinAmount: '10000.00'
+                  strongMedianFactor: 4
+                  strongMadFactor: 6
+              - ruleId: 3
+                name: Недавнее устройство
+                enabled: true
+                points:
+                  triggered: 15
+                parameters:
+                  newDeviceWindowSeconds: 86400
+              - ruleId: 4
+                name: Много новых получателей
+                enabled: true
+                points:
+                  triggered: 25
+                parameters:
+                  windowSeconds: 600
+                  minNewRecipients: 6
+              - ruleId: 5
+                name: Много отправителей
+                enabled: true
+                points:
+                  triggered: 30
+                parameters:
+                  windowSeconds: 3600
+                  minSenders: 6
+              - ruleId: 6
+                name: Общее устройство
+                enabled: true
+                points:
+                  triggered: 20
+                parameters:
+                  windowSeconds: 86400
+                  minUsers: 4
+              - ruleId: 7
+                name: Замыкание цикла
+                enabled: true
+                points:
+                  triggered: 20
+                parameters:
+                  windowSeconds: 3600
+                  maxAmountRatio: 1.5
+              - ruleId: 8
+                name: Резкая смена геолокации
+                enabled: true
+                points:
+                  triggered: 15
+                parameters:
+                  windowSeconds: 7200
+                  minDistanceKm: 500
+  /rules/{ruleId}:
+    parameters:
+    - name: ruleId
+      in: path
+      description: Номер правила 1..8.
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 8
+    put:
+      operationId: antifraudUpdateRule
+      tags:
+      - Rules
+      summary: Изменить конфигурацию правила
+      description: 'Роли: ADMIN.
+
+
+        Тело полностью заменяет изменяемые поля конкретного правила. Настройки должны сохраняться после рестарта;
+        изменение фиксируется в аудите с sub администратора. До обеспечения сохранения и аудита операция не
+        считается успешной. Механизм сохранения конфигурации определяется реализацией. История не пересчитывается;
+        выключенное правило даёт SKIPPED/0 в новых проверках. Номера алгоритмов, формула общего score и границы
+        решений SQL не меняются. При одновременных PUT применяется последняя успешно сохранённая настройка.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Сохранённая конфигурация правила.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuleConfig'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRuleRequest'
+            examples:
+              '1':
+                summary: R1. Частые попытки
+                value:
+                  enabled: true
+                  points:
+                    weak: 15
+                    strong: 30
+                  parameters:
+                    shortWindowSeconds: 120
+                    shortCount: 3
+                    longWindowSeconds: 600
+                    longCount: 6
+              '2':
+                summary: R2. Необычная сумма
+                value:
+                  enabled: true
+                  points:
+                    weak: 15
+                    strong: 30
+                  parameters:
+                    historyDays: 30
+                    weakMinAmount: '2000.00'
+                    weakMedianFactor: 3
+                    weakMadFactor: 4
+                    strongMinAmount: '10000.00'
+                    strongMedianFactor: 4
+                    strongMadFactor: 6
+              '3':
+                summary: R3. Недавнее устройство
+                value:
+                  enabled: true
+                  points:
+                    triggered: 15
+                  parameters:
+                    newDeviceWindowSeconds: 86400
+              '4':
+                summary: R4. Много новых получателей
+                value:
+                  enabled: true
+                  points:
+                    triggered: 25
+                  parameters:
+                    windowSeconds: 600
+                    minNewRecipients: 6
+              '5':
+                summary: R5. Много отправителей
+                value:
+                  enabled: true
+                  points:
+                    triggered: 30
+                  parameters:
+                    windowSeconds: 3600
+                    minSenders: 6
+              '6':
+                summary: R6. Общее устройство
+                value:
+                  enabled: true
+                  points:
+                    triggered: 20
+                  parameters:
+                    windowSeconds: 86400
+                    minUsers: 4
+              '7':
+                summary: R7. Замыкание цикла
+                value:
+                  enabled: true
+                  points:
+                    triggered: 20
+                  parameters:
+                    windowSeconds: 3600
+                    maxAmountRatio: 1.5
+              '8':
+                summary: R8. Резкая смена геолокации
+                value:
+                  enabled: true
+                  points:
+                    triggered: 15
+                  parameters:
+                    windowSeconds: 7200
+                    minDistanceKm: 500
+  /analytics:
+    get:
+      operationId: antifraudGetAnalytics
+      tags:
+      - Analytics
+      summary: Антифрод-аналитика
+      description: 'Роли: ANALYST, ADMIN.
+
+
+        Период не более 31 суток. topLimit ограничивает три рейтинговых списка. Определения показателей и временные
+        базы приведены в AntifraudAnalytics.'
+      x-roles:
+      - ANALYST
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Статистика проверок и связей.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AntifraudAnalytics'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/FromRequired
+      - $ref: ./common.yaml#/components/parameters/ToRequired
+      - name: topLimit
+        in: query
+        description: Размер каждого рейтинга.
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+  /audit:
+    get:
+      operationId: antifraudListAudit
+      tags:
+      - Audit
+      summary: Общий аудит антифрода
+      description: 'Роли: ADMIN.
+
+
+        Сортировка occurredAt DESC, id DESC. Для ANALYST аудит отдельной проверки доступен через /checks/{checkId}/audit.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница аудита.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - $ref: ./common.yaml#/components/parameters/ActorId
+      - name: checkId
+        in: query
+        description: Связанная проверка.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/EntityId
+      - $ref: ./common.yaml#/components/parameters/Action
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /health:
+    get:
+      operationId: antifraudHealth
+      tags:
+      - Health
+      summary: Проверка состояния сервиса и БД
+      description: Проверяет доступность БД. Внутренний endpoint сервиса; публичная маршрутизация через Nginx не требуется.
+      security: []
+      x-internal: true
+      servers:
+      - url: '{serviceOrigin}'
+        variables:
+          serviceOrigin:
+            default: http://localhost
+            description: Прямой внутренний HTTP-адрес этого сервиса, без API-префикса.
+      responses:
+        '200':
+          description: Сервис и БД доступны.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Health
+              example:
+                status: UP
+        '503':
+          description: БД недоступна.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Health
+              example:
+                status: DOWN
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: ./common.yaml#/components/securitySchemes/bearerAuth
+  schemas:
+    MissingGeo:
+      type: object
+      required:
+      - status
+      - latitude
+      - longitude
+      - resolvedAt
+      properties:
+        status:
+          type: string
+          enum:
+          - MISSING
+        latitude:
+          type: number
+          nullable: true
+          enum:
+          - null
+        longitude:
+          type: number
+          nullable: true
+          enum:
+          - null
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+          enum:
+          - null
+    ResolvedGeo:
+      type: object
+      required:
+      - status
+      - latitude
+      - longitude
+      - resolvedAt
+      properties:
+        status:
+          type: string
+          enum:
+          - FRESH
+          - CACHED
+          - STALE
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        resolvedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+    Geo:
+      oneOf:
+      - $ref: '#/components/schemas/MissingGeo'
+      - $ref: '#/components/schemas/ResolvedGeo'
+      description: MISSING требует null для координат и resolvedAt; остальные статусы — заполненных значений.
+    TransferSnapshot:
+      type: object
+      required:
+      - id
+      - fromAccountId
+      - toAccountId
+      - senderId
+      - recipientId
+      - amount
+      - deviceId
+      - ipAddress
+      - createdAt
+      - receivedAt
+      - geo
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        fromAccountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        toAccountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        senderId:
+          $ref: ./common.yaml#/components/schemas/UserId
+        recipientId:
+          $ref: ./common.yaml#/components/schemas/UserId
+        amount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        deviceId:
+          $ref: ./common.yaml#/components/schemas/NullableDeviceId
+        ipAddress:
+          $ref: ./common.yaml#/components/schemas/NullableIPAddress
+        createdAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        receivedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        geo:
+          $ref: '#/components/schemas/Geo'
+    RuleResult:
+      type: object
+      required:
+      - ruleId
+      - status
+      - score
+      - reason
+      properties:
+        ruleId:
+          type: integer
+          minimum: 1
+          maximum: 8
+        status:
+          type: string
+          enum:
+          - TRIGGERED
+          - NOT_TRIGGERED
+          - SKIPPED
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        reason:
+          type: string
+          minLength: 1
+      description: TRIGGERED требует score > 0; NOT_TRIGGERED и SKIPPED — score=0.
+      example:
+        ruleId: 1
+        status: TRIGGERED
+        score: 15
+        reason: Не менее трёх попыток за две минуты.
+    CheckSummary:
+      type: object
+      required:
+      - id
+      - transferId
+      - riskScore
+      - automaticDecision
+      - finalDecision
+      - decisionSource
+      - reviewCaseId
+      - checkedAt
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        transferId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        automaticDecision:
+          $ref: ./common.yaml#/components/schemas/AutomaticDecision
+        finalDecision:
+          $ref: ./common.yaml#/components/schemas/NullableFinalDecision
+        decisionSource:
+          $ref: ./common.yaml#/components/schemas/NullableDecisionSource
+        reviewCaseId:
+          $ref: ./common.yaml#/components/schemas/NullableEntityId
+        checkedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+      description: Для незакрытого ручного рассмотрения finalDecision и decisionSource равны null. Автоматическое
+        APPROVED не гарантирует проведение перевода в Money.
+      example:
+        id: 7
+        transferId: 7
+        riskScore: 75
+        automaticDecision: REJECTED
+        finalDecision: REJECTED
+        decisionSource: AUTOMATIC
+        reviewCaseId: null
+        checkedAt: '2026-11-06T12:00:02Z'
+    Check:
+      type: object
+      required:
+      - id
+      - transferId
+      - riskScore
+      - automaticDecision
+      - finalDecision
+      - decisionSource
+      - reviewCaseId
+      - checkedAt
+      - transfer
+      - rules
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        transferId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        riskScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        automaticDecision:
+          $ref: ./common.yaml#/components/schemas/AutomaticDecision
+        finalDecision:
+          $ref: ./common.yaml#/components/schemas/NullableFinalDecision
+        decisionSource:
+          $ref: ./common.yaml#/components/schemas/NullableDecisionSource
+        reviewCaseId:
+          $ref: ./common.yaml#/components/schemas/NullableEntityId
+        checkedAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        transfer:
+          $ref: '#/components/schemas/TransferSnapshot'
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleResult'
+          minItems: 8
+          maxItems: 8
+      description: Результат содержит ровно по одной записи каждого ruleId от 1 до 8, в порядке ruleId. score
+        = min(100, max(R1,R4)+R2+R3+R5+R6+R7+R8).
+      example:
+        id: 7
+        transferId: 7
+        riskScore: 75
+        automaticDecision: REJECTED
+        finalDecision: REJECTED
+        decisionSource: AUTOMATIC
+        reviewCaseId: null
+        checkedAt: '2026-11-06T12:00:02Z'
+        transfer:
+          id: 7
+          fromAccountId: 2
+          toAccountId: 3
+          senderId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+          recipientId: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+          amount: '50000.00'
+          deviceId: alice-new
+          ipAddress: 198.51.100.10
+          createdAt: '2026-11-06T12:00:00Z'
+          receivedAt: '2026-11-06T12:00:01Z'
+          geo:
+            status: FRESH
+            latitude: 55.7558
+            longitude: 37.6173
+            resolvedAt: '2026-11-06T12:00:01Z'
+        rules:
+        - ruleId: 1
+          status: TRIGGERED
+          score: 15
+          reason: Не менее трёх попыток за две минуты.
+        - ruleId: 2
+          status: TRIGGERED
+          score: 30
+          reason: Сумма выше сильного порога.
+        - ruleId: 3
+          status: TRIGGERED
+          score: 15
+          reason: Новое устройство.
+        - ruleId: 4
+          status: NOT_TRIGGERED
+          score: 0
+          reason: Условие правила не выполнено.
+        - ruleId: 5
+          status: NOT_TRIGGERED
+          score: 0
+          reason: Условие правила не выполнено.
+        - ruleId: 6
+          status: NOT_TRIGGERED
+          score: 0
+          reason: Условие правила не выполнено.
+        - ruleId: 7
+          status: NOT_TRIGGERED
+          score: 0
+          reason: Условие правила не выполнено.
+        - ruleId: 8
+          status: TRIGGERED
+          score: 15
+          reason: Расстояние от предыдущего входа превышает порог.
+    ReviewCase:
+      type: object
+      required:
+      - id
+      - checkId
+      - transferId
+      - analystId
+      - status
+      - decision
+      - comment
+      - createdAt
+      - decidedAt
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        checkId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        transferId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        analystId:
+          $ref: ./common.yaml#/components/schemas/NullableUserId
+        status:
+          $ref: ./common.yaml#/components/schemas/ReviewStatus
+        decision:
+          $ref: ./common.yaml#/components/schemas/NullableFinalDecision
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        decidedAt:
+          $ref: ./common.yaml#/components/schemas/NullableDateTime
+      description: OPEN не назначена; IN_PROGRESS имеет аналитика; CLOSED имеет аналитика, решение и decidedAt.
+        Закрытая карточка неизменяема.
+      example:
+        id: 1
+        checkId: 5
+        transferId: 5
+        analystId: null
+        status: OPEN
+        decision: null
+        comment: null
+        createdAt: '2026-11-06T12:00:02Z'
+        decidedAt: null
+    ReviewDecisionRequest:
+      type: object
+      required:
+      - decision
+      properties:
+        decision:
+          $ref: ./common.yaml#/components/schemas/FinalDecision
+        comment:
+          type: string
+          nullable: true
+      additionalProperties: false
+      example:
+        decision: APPROVED
+        comment: Операция проверена.
+    CheckPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckSummary'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    ReviewPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewCase'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    AuditPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: ./common.yaml#/components/schemas/AuditEvent
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    UserNode:
+      type: object
+      required:
+      - id
+      - type
+      - label
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: ID с пространством имён, например account:2.
+        type:
+          type: string
+          enum:
+          - USER
+        label:
+          type: string
+        properties:
+          type: object
+          required:
+          - userId
+          properties:
+            userId:
+              $ref: ./common.yaml#/components/schemas/UserId
+    BankAccountNode:
+      type: object
+      required:
+      - id
+      - type
+      - label
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: ID с пространством имён, например account:2.
+        type:
+          type: string
+          enum:
+          - BANK_ACCOUNT
+        label:
+          type: string
+        properties:
+          type: object
+          required:
+          - accountId
+          - ownerId
+          properties:
+            accountId:
+              $ref: ./common.yaml#/components/schemas/EntityId
+            ownerId:
+              $ref: ./common.yaml#/components/schemas/UserId
+    DeviceNode:
+      type: object
+      required:
+      - id
+      - type
+      - label
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: ID с пространством имён, например account:2.
+        type:
+          type: string
+          enum:
+          - DEVICE
+        label:
+          type: string
+        properties:
+          type: object
+          required:
+          - deviceId
+          properties:
+            deviceId:
+              type: string
+              minLength: 1
+    IpAddressNode:
+      type: object
+      required:
+      - id
+      - type
+      - label
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: ID с пространством имён, например account:2.
+        type:
+          type: string
+          enum:
+          - IP_ADDRESS
+        label:
+          type: string
+        properties:
+          type: object
+          required:
+          - ipAddress
+          properties:
+            ipAddress:
+              $ref: ./common.yaml#/components/schemas/IPAddress
+    GraphNode:
+      oneOf:
+      - $ref: '#/components/schemas/UserNode'
+      - $ref: '#/components/schemas/BankAccountNode'
+      - $ref: '#/components/schemas/DeviceNode'
+      - $ref: '#/components/schemas/IpAddressNode'
+      discriminator:
+        propertyName: type
+        mapping:
+          USER: '#/components/schemas/UserNode'
+          BANK_ACCOUNT: '#/components/schemas/BankAccountNode'
+          DEVICE: '#/components/schemas/DeviceNode'
+          IP_ADDRESS: '#/components/schemas/IpAddressNode'
+    OwnsEdge:
+      type: object
+      required:
+      - id
+      - type
+      - source
+      - target
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+          - OWNS
+        source:
+          type: string
+          minLength: 1
+        target:
+          type: string
+          minLength: 1
+        properties:
+          type: object
+          required:
+          - ownerId
+          properties:
+            ownerId:
+              $ref: ./common.yaml#/components/schemas/UserId
+    UsesDeviceEdge:
+      type: object
+      required:
+      - id
+      - type
+      - source
+      - target
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+          - USES_DEVICE
+        source:
+          type: string
+          minLength: 1
+        target:
+          type: string
+          minLength: 1
+        properties:
+          type: object
+          required:
+          - firstSeenAt
+          - lastSeenAt
+          - useCount
+          properties:
+            firstSeenAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            lastSeenAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            useCount:
+              type: integer
+              format: int64
+              minimum: 1
+    LoggedInFromEdge:
+      type: object
+      required:
+      - id
+      - type
+      - source
+      - target
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+          - LOGGED_IN_FROM
+        source:
+          type: string
+          minLength: 1
+        target:
+          type: string
+          minLength: 1
+        properties:
+          type: object
+          required:
+          - firstSeenAt
+          - lastSeenAt
+          - useCount
+          properties:
+            firstSeenAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            lastSeenAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            useCount:
+              type: integer
+              format: int64
+              minimum: 1
+    UsedFromEdge:
+      type: object
+      required:
+      - id
+      - type
+      - source
+      - target
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+          - USED_FROM
+        source:
+          type: string
+          minLength: 1
+        target:
+          type: string
+          minLength: 1
+        properties:
+          type: object
+          required:
+          - firstSeenAt
+          - lastSeenAt
+          - useCount
+          properties:
+            firstSeenAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            lastSeenAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            useCount:
+              type: integer
+              format: int64
+              minimum: 1
+    AttemptedTransferEdge:
+      type: object
+      required:
+      - id
+      - type
+      - source
+      - target
+      - properties
+      properties:
+        id:
+          type: string
+          minLength: 1
+        type:
+          type: string
+          enum:
+          - ATTEMPTED_TRANSFER_TO
+        source:
+          type: string
+          minLength: 1
+        target:
+          type: string
+          minLength: 1
+        properties:
+          type: object
+          required:
+          - transferId
+          - amount
+          - occurredAt
+          - riskScore
+          - automaticDecision
+          - deviceId
+          - ipAddress
+          properties:
+            transferId:
+              $ref: ./common.yaml#/components/schemas/EntityId
+            amount:
+              $ref: ./common.yaml#/components/schemas/PositiveMoney
+            occurredAt:
+              $ref: ./common.yaml#/components/schemas/DateTime
+            riskScore:
+              type: integer
+              minimum: 0
+              maximum: 100
+              nullable: true
+            automaticDecision:
+              type: string
+              enum:
+              - APPROVED
+              - REVIEW_REQUIRED
+              - REJECTED
+              - null
+              nullable: true
+            deviceId:
+              $ref: ./common.yaml#/components/schemas/NullableDeviceId
+            ipAddress:
+              $ref: ./common.yaml#/components/schemas/NullableIPAddress
+    GraphEdge:
+      oneOf:
+      - $ref: '#/components/schemas/OwnsEdge'
+      - $ref: '#/components/schemas/UsesDeviceEdge'
+      - $ref: '#/components/schemas/LoggedInFromEdge'
+      - $ref: '#/components/schemas/UsedFromEdge'
+      - $ref: '#/components/schemas/AttemptedTransferEdge'
+      discriminator:
+        propertyName: type
+        mapping:
+          OWNS: '#/components/schemas/OwnsEdge'
+          USES_DEVICE: '#/components/schemas/UsesDeviceEdge'
+          LOGGED_IN_FROM: '#/components/schemas/LoggedInFromEdge'
+          USED_FROM: '#/components/schemas/UsedFromEdge'
+          ATTEMPTED_TRANSFER_TO: '#/components/schemas/AttemptedTransferEdge'
+    Graph:
+      type: object
+      required:
+      - nodes
+      - edges
+      - truncated
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphNode'
+          maxItems: 500
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/GraphEdge'
+          maxItems: 2000
+        truncated:
+          type: boolean
+      description: 'source/target каждого ребра ссылаются на возвращённые nodes.id. Параллельные попытки не
+        схлопываются: id ребра содержит transferId. truncated=true означает ограничение по числу вершин или
+        максимуму 2000 рёбер. APPROVED в графе — решение антифрода, не статус проведения Money.'
+      example:
+        nodes:
+        - id: user:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+          type: USER
+          label: Клиент 1
+          properties:
+            userId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        - id: user:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+          type: USER
+          label: Клиент 2
+          properties:
+            userId: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+        - id: account:2
+          type: BANK_ACCOUNT
+          label: Счёт 2
+          properties:
+            accountId: 2
+            ownerId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        - id: account:3
+          type: BANK_ACCOUNT
+          label: Счёт 3
+          properties:
+            accountId: 3
+            ownerId: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+        edges:
+        - id: owns:2
+          type: OWNS
+          source: user:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+          target: account:2
+          properties:
+            ownerId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        - id: owns:3
+          type: OWNS
+          source: user:bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+          target: account:3
+          properties:
+            ownerId: bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb
+        - id: transfer:7
+          type: ATTEMPTED_TRANSFER_TO
+          source: account:2
+          target: account:3
+          properties:
+            transferId: 7
+            amount: '50000.00'
+            occurredAt: '2026-11-06T12:00:00Z'
+            riskScore: 75
+            automaticDecision: REJECTED
+            deviceId: alice-new
+            ipAddress: 198.51.100.10
+        truncated: false
+    GradedPoints:
+      type: object
+      required:
+      - weak
+      - strong
+      properties:
+        weak:
+          type: integer
+          minimum: 1
+          maximum: 100
+        strong:
+          type: integer
+          minimum: 1
+          maximum: 100
+      additionalProperties: false
+      description: weak <= strong.
+    SinglePoints:
+      type: object
+      required:
+      - triggered
+      properties:
+        triggered:
+          type: integer
+          minimum: 1
+          maximum: 100
+      additionalProperties: false
+    R1Parameters:
+      type: object
+      required:
+      - shortWindowSeconds
+      - shortCount
+      - longWindowSeconds
+      - longCount
+      properties:
+        shortWindowSeconds:
+          type: integer
+          minimum: 1
+        shortCount:
+          type: integer
+          minimum: 1
+        longWindowSeconds:
+          type: integer
+          minimum: 1
+        longCount:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+      example:
+        shortWindowSeconds: 120
+        shortCount: 3
+        longWindowSeconds: 600
+        longCount: 6
+    UpdateR1:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/GradedPoints'
+        parameters:
+          $ref: '#/components/schemas/R1Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R1. longWindowSeconds >= shortWindowSeconds; longCount >=
+        shortCount.
+      example:
+        enabled: true
+        points:
+          weak: 15
+          strong: 30
+        parameters:
+          shortWindowSeconds: 120
+          shortCount: 3
+          longWindowSeconds: 600
+          longCount: 6
+    R1Config:
+      type: object
+      description: >-
+        Частота попыток переводов клиента, включая текущую попытку. По умолчанию не менее трёх попыток
+        за две минуты дают 15 баллов, не менее шести за десять минут — 30. При выполнении обоих условий
+        выбирается сильный сигнал.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 1
+        name:
+          type: string
+          enum:
+          - Частые попытки
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/GradedPoints'
+        parameters:
+          $ref: '#/components/schemas/R1Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 1
+        name: Частые попытки
+        enabled: true
+        points:
+          weak: 15
+          strong: 30
+        parameters:
+          shortWindowSeconds: 120
+          shortCount: 3
+          longWindowSeconds: 600
+          longCount: 6
+    R2Parameters:
+      type: object
+      required:
+      - historyDays
+      - weakMinAmount
+      - weakMedianFactor
+      - weakMadFactor
+      - strongMinAmount
+      - strongMedianFactor
+      - strongMadFactor
+      properties:
+        historyDays:
+          type: integer
+          minimum: 1
+        weakMinAmount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        weakMedianFactor:
+          type: number
+          minimum: 0
+        weakMadFactor:
+          type: number
+          minimum: 0
+        strongMinAmount:
+          $ref: ./common.yaml#/components/schemas/PositiveMoney
+        strongMedianFactor:
+          type: number
+          minimum: 0
+        strongMadFactor:
+          type: number
+          minimum: 0
+      additionalProperties: false
+      example:
+        historyDays: 30
+        weakMinAmount: '2000.00'
+        weakMedianFactor: 3
+        weakMadFactor: 4
+        strongMinAmount: '10000.00'
+        strongMedianFactor: 4
+        strongMadFactor: 6
+    UpdateR2:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/GradedPoints'
+        parameters:
+          $ref: '#/components/schemas/R2Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R2. Сильные коэффициенты и минимальная сумма не меньше соответствующих
+        слабых.
+      example:
+        enabled: true
+        points:
+          weak: 15
+          strong: 30
+        parameters:
+          historyDays: 30
+          weakMinAmount: '2000.00'
+          weakMedianFactor: 3
+          weakMadFactor: 4
+          strongMinAmount: '10000.00'
+          strongMedianFactor: 4
+          strongMadFactor: 6
+    R2Config:
+      type: object
+      description: >-
+        Сумма сравнивается с медианой m и MAD предыдущих автоматически одобренных попыток клиента
+        за historyDays дней, по умолчанию 30. Текущая попытка в историю не входит.
+        Слабый порог: max(weakMinAmount, weakMedianFactor*m, m + weakMadFactor*MAD).
+        Сильный порог: max(strongMinAmount, strongMedianFactor*m, m + strongMadFactor*MAD).
+        По умолчанию это max(2000, 3m, m + 4MAD) и max(10000, 4m, m + 6MAD).
+        Превышение слабого или сильного порога по умолчанию даёт соответственно 15 или 30 баллов;
+        при выполнении обоих условий выбирается сильный сигнал.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 2
+        name:
+          type: string
+          enum:
+          - Необычная сумма
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/GradedPoints'
+        parameters:
+          $ref: '#/components/schemas/R2Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 2
+        name: Необычная сумма
+        enabled: true
+        points:
+          weak: 15
+          strong: 30
+        parameters:
+          historyDays: 30
+          weakMinAmount: '2000.00'
+          weakMedianFactor: 3
+          weakMadFactor: 4
+          strongMinAmount: '10000.00'
+          strongMedianFactor: 4
+          strongMadFactor: 6
+    R3Parameters:
+      type: object
+      required:
+      - newDeviceWindowSeconds
+      properties:
+        newDeviceWindowSeconds:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+      example:
+        newDeviceWindowSeconds: 86400
+    UpdateR3:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R3Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R3. Исключение первоначального устройства остаётся частью
+        алгоритма.
+      example:
+        enabled: true
+        points:
+          triggered: 15
+        parameters:
+          newDeviceWindowSeconds: 86400
+    R3Config:
+      type: object
+      description: >-
+        Новое для переводов клиента устройство. Сигнал действует newDeviceWindowSeconds после первого
+        появления устройства в попытках переводов клиента, по умолчанию 24 часа и 15 баллов.
+        Первоначальное устройство при отсутствии истории клиента исключается.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 3
+        name:
+          type: string
+          enum:
+          - Недавнее устройство
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R3Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 3
+        name: Недавнее устройство
+        enabled: true
+        points:
+          triggered: 15
+        parameters:
+          newDeviceWindowSeconds: 86400
+    R4Parameters:
+      type: object
+      required:
+      - windowSeconds
+      - minNewRecipients
+      properties:
+        windowSeconds:
+          type: integer
+          minimum: 1
+        minNewRecipients:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+      example:
+        windowSeconds: 600
+        minNewRecipients: 6
+    UpdateR4:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R4Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R4.
+      example:
+        enabled: true
+        points:
+          triggered: 25
+        parameters:
+          windowSeconds: 600
+          minNewRecipients: 6
+    R4Config:
+      type: object
+      description: >-
+        Число разных новых получателей-клиентов за windowSeconds. По умолчанию не менее шести
+        получателей за десять минут дают 25 баллов. Новизна определяется по предыдущим попыткам клиента;
+        разные счета одного получателя считаются одним клиентом.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 4
+        name:
+          type: string
+          enum:
+          - Много новых получателей
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R4Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 4
+        name: Много новых получателей
+        enabled: true
+        points:
+          triggered: 25
+        parameters:
+          windowSeconds: 600
+          minNewRecipients: 6
+    R5Parameters:
+      type: object
+      required:
+      - windowSeconds
+      - minSenders
+      properties:
+        windowSeconds:
+          type: integer
+          minimum: 1
+        minSenders:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+      example:
+        windowSeconds: 3600
+        minSenders: 6
+    UpdateR5:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R5Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R5.
+      example:
+        enabled: true
+        points:
+          triggered: 30
+        parameters:
+          windowSeconds: 3600
+          minSenders: 6
+    R5Config:
+      type: object
+      description: >-
+        Число разных клиентов-отправителей, направляющих попытки переводов на один конкретный счёт
+        за windowSeconds. По умолчанию не менее шести отправителей за час дают 30 баллов.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 5
+        name:
+          type: string
+          enum:
+          - Много отправителей
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R5Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 5
+        name: Много отправителей
+        enabled: true
+        points:
+          triggered: 30
+        parameters:
+          windowSeconds: 3600
+          minSenders: 6
+    R6Parameters:
+      type: object
+      required:
+      - windowSeconds
+      - minUsers
+      properties:
+        windowSeconds:
+          type: integer
+          minimum: 1
+        minUsers:
+          type: integer
+          minimum: 1
+      additionalProperties: false
+      example:
+        windowSeconds: 86400
+        minUsers: 4
+    UpdateR6:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R6Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R6.
+      example:
+        enabled: true
+        points:
+          triggered: 20
+        parameters:
+          windowSeconds: 86400
+          minUsers: 4
+    R6Config:
+      type: object
+      description: >-
+        Число разных клиентов, использующих одно устройство в попытках переводов за windowSeconds.
+        По умолчанию не менее четырёх клиентов за сутки дают 20 баллов.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 6
+        name:
+          type: string
+          enum:
+          - Общее устройство
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R6Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 6
+        name: Общее устройство
+        enabled: true
+        points:
+          triggered: 20
+        parameters:
+          windowSeconds: 86400
+          minUsers: 4
+    R7Parameters:
+      type: object
+      required:
+      - windowSeconds
+      - maxAmountRatio
+      properties:
+        windowSeconds:
+          type: integer
+          minimum: 1
+        maxAmountRatio:
+          type: number
+          minimum: 1
+      additionalProperties: false
+      example:
+        windowSeconds: 3600
+        maxAmountRatio: 1.5
+    UpdateR7:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R7Parameters'
+      additionalProperties: false
+      description: 'Полная изменяемая конфигурация R7. Длина цикла фиксирована: 4 перевода между разными клиентами.'
+      example:
+        enabled: true
+        points:
+          triggered: 20
+        parameters:
+          windowSeconds: 3600
+          maxAmountRatio: 1.5
+    R7Config:
+      type: object
+      description: >-
+        Текущая попытка замыкает цикл ровно из четырёх переводов между разными клиентами
+        за windowSeconds, по умолчанию час. Максимальная сумма всех четырёх переводов, включая текущий,
+        не превышает минимальную более чем в maxAmountRatio раз, по умолчанию 1.5. Базовый вес — 20 баллов.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 7
+        name:
+          type: string
+          enum:
+          - Замыкание цикла
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R7Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 7
+        name: Замыкание цикла
+        enabled: true
+        points:
+          triggered: 20
+        parameters:
+          windowSeconds: 3600
+          maxAmountRatio: 1.5
+    R8Parameters:
+      type: object
+      required:
+      - windowSeconds
+      - minDistanceKm
+      properties:
+        windowSeconds:
+          type: integer
+          minimum: 1
+        minDistanceKm:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+      additionalProperties: false
+      example:
+        windowSeconds: 7200
+        minDistanceKm: 500
+    UpdateR8:
+      type: object
+      required:
+      - enabled
+      - points
+      - parameters
+      properties:
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R8Parameters'
+      additionalProperties: false
+      description: Полная изменяемая конфигурация R8.
+      example:
+        enabled: true
+        points:
+          triggered: 15
+        parameters:
+          windowSeconds: 7200
+          minDistanceKm: 500
+    R8Config:
+      type: object
+      description: >-
+        Расстояние между текущим переводом и предыдущим успешным входом клиента за последние
+        windowSeconds составляет не менее minDistanceKm. По умолчанию это 500 км за два часа и 15 баллов.
+        При отсутствии подходящего входа или пригодных геоданных результат — SKIPPED и 0 баллов.
+      required:
+      - ruleId
+      - name
+      - enabled
+      - points
+      - parameters
+      properties:
+        ruleId:
+          type: integer
+          enum:
+          - 8
+        name:
+          type: string
+          enum:
+          - Резкая смена геолокации
+        enabled:
+          type: boolean
+        points:
+          $ref: '#/components/schemas/SinglePoints'
+        parameters:
+          $ref: '#/components/schemas/R8Parameters'
+      additionalProperties: false
+      example:
+        ruleId: 8
+        name: Резкая смена геолокации
+        enabled: true
+        points:
+          triggered: 15
+        parameters:
+          windowSeconds: 7200
+          minDistanceKm: 500
+    RuleConfig:
+      description: >-
+        Конфигурация одного из восьми правил. Недостаток данных или отключение правила даёт SKIPPED
+        и 0 баллов. Итоговая оценка: min(100, max(R1,R4) + R2 + R3 + R5 + R6 + R7 + R8).
+      oneOf:
+      - $ref: '#/components/schemas/R1Config'
+      - $ref: '#/components/schemas/R2Config'
+      - $ref: '#/components/schemas/R3Config'
+      - $ref: '#/components/schemas/R4Config'
+      - $ref: '#/components/schemas/R5Config'
+      - $ref: '#/components/schemas/R6Config'
+      - $ref: '#/components/schemas/R7Config'
+      - $ref: '#/components/schemas/R8Config'
+    UpdateRuleRequest:
+      oneOf:
+      - $ref: '#/components/schemas/UpdateR1'
+      - $ref: '#/components/schemas/UpdateR2'
+      - $ref: '#/components/schemas/UpdateR3'
+      - $ref: '#/components/schemas/UpdateR4'
+      - $ref: '#/components/schemas/UpdateR5'
+      - $ref: '#/components/schemas/UpdateR6'
+      - $ref: '#/components/schemas/UpdateR7'
+      - $ref: '#/components/schemas/UpdateR8'
+      description: Тело обязано соответствовать ruleId пути. Несовпадение типа параметров, неизвестные поля
+        или нарушение соотношений — 400 VALIDATION_ERROR.
+    AutomaticDecisionCounts:
+      type: object
+      required:
+      - APPROVED
+      - REVIEW_REQUIRED
+      - REJECTED
+      properties:
+        APPROVED:
+          type: integer
+          format: int64
+          minimum: 0
+        REVIEW_REQUIRED:
+          type: integer
+          format: int64
+          minimum: 0
+        REJECTED:
+          type: integer
+          format: int64
+          minimum: 0
+    RiskScoreBucket:
+      type: object
+      required:
+      - minScore
+      - maxScore
+      - count
+      properties:
+        minScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        maxScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+        count:
+          type: integer
+          format: int64
+          minimum: 0
+    RuleTriggerCount:
+      type: object
+      required:
+      - ruleId
+      - count
+      properties:
+        ruleId:
+          type: integer
+          minimum: 1
+          maximum: 8
+        count:
+          type: integer
+          format: int64
+          minimum: 0
+    RiskUser:
+      type: object
+      required:
+      - userId
+      - warningCount
+      - maxScore
+      properties:
+        userId:
+          $ref: ./common.yaml#/components/schemas/UserId
+        warningCount:
+          type: integer
+          format: int64
+          minimum: 0
+        maxScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+    SharedDevice:
+      type: object
+      required:
+      - deviceId
+      - userCount
+      - attemptCount
+      properties:
+        deviceId:
+          type: string
+          minLength: 1
+        userCount:
+          type: integer
+          format: int64
+          minimum: 1
+        attemptCount:
+          type: integer
+          format: int64
+          minimum: 1
+    CounterpartyAccount:
+      type: object
+      required:
+      - accountId
+      - incomingClients
+      - outgoingClients
+      - incomingAttemptedAmount
+      - outgoingAttemptedAmount
+      properties:
+        accountId:
+          $ref: ./common.yaml#/components/schemas/EntityId
+        incomingClients:
+          type: integer
+          format: int64
+          minimum: 0
+        outgoingClients:
+          type: integer
+          format: int64
+          minimum: 0
+        incomingAttemptedAmount:
+          $ref: ./common.yaml#/components/schemas/MoneyTotal
+        outgoingAttemptedAmount:
+          $ref: ./common.yaml#/components/schemas/MoneyTotal
+    AntifraudAnalytics:
+      type: object
+      required:
+      - from
+      - to
+      - checkCount
+      - checksByAutomaticDecision
+      - riskScoreBuckets
+      - openReviewCount
+      - averageProcessingMs
+      - triggeredRules
+      - topRiskUsers
+      - sharedDevices
+      - accountsByCounterpartyCount
+      properties:
+        from:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        to:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        checkCount:
+          type: integer
+          format: int64
+          minimum: 0
+        checksByAutomaticDecision:
+          $ref: '#/components/schemas/AutomaticDecisionCounts'
+        riskScoreBuckets:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskScoreBucket'
+          minItems: 3
+          maxItems: 3
+        openReviewCount:
+          type: integer
+          format: int64
+          minimum: 0
+        averageProcessingMs:
+          type: number
+          minimum: 0
+          nullable: true
+        triggeredRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/RuleTriggerCount'
+          minItems: 8
+          maxItems: 8
+        topRiskUsers:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskUser'
+          maxItems: 50
+        sharedDevices:
+          type: array
+          items:
+            $ref: '#/components/schemas/SharedDevice'
+          maxItems: 50
+        accountsByCounterpartyCount:
+          type: array
+          items:
+            $ref: '#/components/schemas/CounterpartyAccount'
+          maxItems: 50
+      description: 'Проверки выбираются по checkedAt в [from,to). Бакеты 0–29, 30–69, 70–100. openReviewCount
+        — текущее число OPEN/IN_PROGRESS вне зависимости от периода. averageProcessingMs = среднее checkedAt
+        - receivedAt, null при пустой выборке; это включает ожидание. warningCount учитывает проверки со score
+        >= 30 по отправителю. sharedDevices включает устройства с >=2 клиентами за период попыток, не является
+        результатом R6 за сутки. Контрагенты и суммы считаются по попыткам в периоде createdAt, независимо
+        от решения и проведения. Ранжирование: warningCount DESC/userId ASC; userCount DESC/deviceId ASC; (incomingClients
+        + outgoingClients) DESC/accountId ASC. Для остальных счётчиков пустая выборка даёт нули.'
+      example:
+        from: '2026-11-01T00:00:00Z'
+        to: '2026-11-07T00:00:00Z'
+        checkCount: 7
+        checksByAutomaticDecision:
+          APPROVED: 4
+          REVIEW_REQUIRED: 2
+          REJECTED: 1
+        riskScoreBuckets:
+        - minScore: 0
+          maxScore: 29
+          count: 4
+        - minScore: 30
+          maxScore: 69
+          count: 2
+        - minScore: 70
+          maxScore: 100
+          count: 1
+        openReviewCount: 1
+        averageProcessingMs: 1000
+        triggeredRules:
+        - ruleId: 1
+          count: 2
+        - ruleId: 2
+          count: 3
+        - ruleId: 3
+          count: 4
+        - ruleId: 4
+          count: 0
+        - ruleId: 5
+          count: 0
+        - ruleId: 6
+          count: 0
+        - ruleId: 7
+          count: 0
+        - ruleId: 8
+          count: 1
+        topRiskUsers:
+        - userId: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+          warningCount: 3
+          maxScore: 75
+        sharedDevices: []
+        accountsByCounterpartyCount:
+        - accountId: 2
+          incomingClients: 0
+          outgoingClients: 2
+          incomingAttemptedAmount: '0.00'
+          outgoingAttemptedAmount: '114100.00'

@@ -1,0 +1,501 @@
+openapi: 3.0.3
+info:
+  title: E-Bank User API
+  version: 1.0.0
+  description: 'Администрирование пользователей Keycloak. Профиль текущего пользователя возвращает Keycloak
+    UserInfo. Регистрация, вход, обновление токенов и выход выполняются средствами Keycloak.'
+servers:
+- url: '{origin}/api/users/v1'
+  variables:
+    origin:
+      default: http://localhost
+      description: Внешний адрес Nginx со схемой и портом, без завершающего слеша.
+tags:
+- name: Users
+- name: Analytics
+- name: Audit
+- name: Health
+security:
+- bearerAuth: []
+paths:
+  /admin/users:
+    get:
+      operationId: userListUsers
+      tags:
+      - Users
+      summary: Список пользователей
+      description: 'Роли: ADMIN.
+
+
+        Данные берутся из Keycloak. Сортировка: username, затем id по возрастанию.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница пользователей.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+      parameters:
+      - name: q
+        in: query
+        description: Поиск по логину, имени или email.
+        required: false
+        schema:
+          type: string
+          minLength: 1
+      - name: enabled
+        in: query
+        description: Состояние учётной записи.
+        required: false
+        schema:
+          type: boolean
+      - name: role
+        in: query
+        description: Прикладная роль.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/Role
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /admin/users/{userId}:
+    parameters:
+    - name: userId
+      in: path
+      description: ID пользователя Keycloak.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/UserId
+    get:
+      operationId: userGetUser
+      tags:
+      - Users
+      summary: Получить пользователя
+      description: 'Роли: ADMIN.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Пользователь.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /admin/users/{userId}/status:
+    parameters:
+    - name: userId
+      in: path
+      description: ID пользователя Keycloak.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/UserId
+    patch:
+      operationId: userSetUserStatus
+      tags:
+      - Users
+      summary: Заблокировать или разблокировать пользователя
+      description: 'Роли: ADMIN.
+
+
+        enabled=false отключает учётную запись и завершает активные сессии через Keycloak Admin API. enabled=true
+        снимает блокировку. Изменение фиксируется в аудите с sub администратора. Повтор того же состояния допустим.
+        Метод не обещает мгновенную инвалидизацию уже выданного JWT вне механизмов Keycloak.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Новое состояние пользователя.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+                username: alice
+                firstName: Alice
+                lastName: null
+                email: alice@example.com
+                enabled: false
+                roles:
+                - CLIENT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserStatusRequest'
+  /admin/users/{userId}/roles:
+    parameters:
+    - name: userId
+      in: path
+      description: ID пользователя Keycloak.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/UserId
+    put:
+      operationId: userSetUserRoles
+      tags:
+      - Users
+      summary: Заменить прикладные роли
+      description: 'Роли: ADMIN.
+
+
+        Изменяет только CLIENT, ANALYST, ADMIN. Действие записывается в аудит. Существующие токены обновляют
+        роли после перевыпуска.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '409':
+          $ref: ./common.yaml#/components/responses/Error409
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Пользователь с новым набором ролей.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetUserRolesRequest'
+  /admin/users/{userId}/sessions:
+    parameters:
+    - name: userId
+      in: path
+      description: ID пользователя Keycloak.
+      required: true
+      schema:
+        $ref: ./common.yaml#/components/schemas/UserId
+    delete:
+      operationId: userTerminateSessions
+      tags:
+      - Users
+      summary: Завершить все сессии пользователя
+      description: 'Роли: ADMIN.
+
+
+        Выполняет административное завершение сессий в Keycloak и записывает аудит. Повтор при отсутствии сессий
+        возвращает 204.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '404':
+          $ref: ./common.yaml#/components/responses/Error404
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '204':
+          description: Сессии завершены.
+  /admin/analytics:
+    get:
+      operationId: userGetAnalytics
+      tags:
+      - Analytics
+      summary: Статистика пользователей и входов
+      description: 'Роли: ADMIN.
+
+
+        Период не более 31 суток.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Статистика.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAnalytics'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/FromRequired
+      - $ref: ./common.yaml#/components/parameters/ToRequired
+  /admin/audit:
+    get:
+      operationId: userListAudit
+      tags:
+      - Audit
+      summary: Аудит действий с пользователями
+      description: 'Роли: ADMIN.
+
+
+        Сортировка: occurredAt DESC, id DESC. userId — субъект изменения, actorId — исполнитель. Записи должны
+        содержать исходного администратора приложения, а не только технического клиента Keycloak.'
+      x-roles:
+      - ADMIN
+      responses:
+        '400':
+          $ref: ./common.yaml#/components/responses/Error400
+        '401':
+          $ref: ./common.yaml#/components/responses/Error401
+        '403':
+          $ref: ./common.yaml#/components/responses/Error403
+        '500':
+          $ref: ./common.yaml#/components/responses/Error500
+        '200':
+          description: Страница аудита.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditPage'
+      parameters:
+      - $ref: ./common.yaml#/components/parameters/From
+      - $ref: ./common.yaml#/components/parameters/To
+      - $ref: ./common.yaml#/components/parameters/ActorId
+      - name: userId
+        in: query
+        description: Пользователь, над которым выполнялось действие.
+        required: false
+        schema:
+          $ref: ./common.yaml#/components/schemas/UserId
+      - $ref: ./common.yaml#/components/parameters/Action
+      - $ref: ./common.yaml#/components/parameters/Limit
+      - $ref: ./common.yaml#/components/parameters/Offset
+  /health:
+    get:
+      operationId: userHealth
+      tags:
+      - Health
+      summary: Проверка состояния сервиса и БД
+      description: Проверяет доступность БД. Внутренний endpoint сервиса; публичная маршрутизация через Nginx не требуется.
+      security: []
+      x-internal: true
+      servers:
+      - url: '{serviceOrigin}'
+        variables:
+          serviceOrigin:
+            default: http://localhost
+            description: Прямой внутренний HTTP-адрес этого сервиса, без API-префикса.
+      responses:
+        '200':
+          description: Сервис и БД доступны.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Health
+              example:
+                status: UP
+        '503':
+          description: БД недоступна.
+          content:
+            application/json:
+              schema:
+                $ref: ./common.yaml#/components/schemas/Health
+              example:
+                status: DOWN
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: ./common.yaml#/components/securitySchemes/bearerAuth
+  schemas:
+    User:
+      type: object
+      required:
+      - id
+      - username
+      - firstName
+      - lastName
+      - email
+      - enabled
+      - roles
+      properties:
+        id:
+          $ref: ./common.yaml#/components/schemas/UserId
+        username:
+          type: string
+          minLength: 1
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        enabled:
+          type: boolean
+        roles:
+          type: array
+          items:
+            $ref: ./common.yaml#/components/schemas/Role
+          uniqueItems: true
+      example:
+        id: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+        username: alice
+        firstName: Alice
+        lastName: null
+        email: alice@example.com
+        enabled: true
+        roles:
+        - CLIENT
+    UserPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    AuditPage:
+      type: object
+      required:
+      - items
+      - limit
+      - offset
+      - hasMore
+      properties:
+        items:
+          type: array
+          items:
+            $ref: ./common.yaml#/components/schemas/AuditEvent
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 50
+        offset:
+          type: integer
+          minimum: 0
+          example: 0
+        hasMore:
+          type: boolean
+          example: false
+    SetUserStatusRequest:
+      type: object
+      required:
+      - enabled
+      properties:
+        enabled:
+          type: boolean
+          example: false
+      additionalProperties: false
+    SetUserRolesRequest:
+      type: object
+      required:
+      - roles
+      properties:
+        roles:
+          type: array
+          items:
+            $ref: ./common.yaml#/components/schemas/Role
+          uniqueItems: true
+          example:
+          - CLIENT
+      additionalProperties: false
+      description: Полная замена набора прикладных ролей CLIENT, ANALYST, ADMIN. Технические роли Keycloak
+        сохраняются.
+    UserAnalytics:
+      type: object
+      required:
+      - from
+      - to
+      - enabledUsers
+      - disabledUsers
+      - loginCount
+      - uniqueLoggedInUsers
+      - administrativeActionCount
+      properties:
+        from:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        to:
+          $ref: ./common.yaml#/components/schemas/DateTime
+        enabledUsers:
+          type: integer
+          format: int64
+          minimum: 0
+        disabledUsers:
+          type: integer
+          format: int64
+          minimum: 0
+        loginCount:
+          type: integer
+          format: int64
+          minimum: 0
+        uniqueLoggedInUsers:
+          type: integer
+          format: int64
+          minimum: 0
+        administrativeActionCount:
+          type: integer
+          format: int64
+          minimum: 0
+      description: enabledUsers и disabledUsers — текущие значения Keycloak; остальные показатели — за [from,to).
+      example:
+        from: '2026-11-01T00:00:00Z'
+        to: '2026-11-07T00:00:00Z'
+        enabledUsers: 120
+        disabledUsers: 4
+        loginCount: 350
+        uniqueLoggedInUsers: 80
+        administrativeActionCount: 12

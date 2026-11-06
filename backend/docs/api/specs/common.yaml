@@ -1,0 +1,399 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token Keycloak. Сервис проверяет подпись, iss, aud, exp и роли. ID token не используется
+        для авторизации прикладных запросов.
+  schemas:
+    EntityId:
+      type: integer
+      format: int32
+      minimum: 1
+      maximum: 2147483647
+      example: 2
+    NullableEntityId:
+      type: integer
+      format: int32
+      minimum: 1
+      maximum: 2147483647
+      nullable: true
+      example: null
+    UserId:
+      type: string
+      minLength: 1
+      description: Непрозрачный Keycloak sub; формат UUID не навязывается.
+      example: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+    NullableUserId:
+      type: string
+      minLength: 1
+      nullable: true
+      example: null
+    DateTime:
+      type: string
+      format: date-time
+      example: '2026-11-06T12:00:00Z'
+    NullableDateTime:
+      type: string
+      format: date-time
+      nullable: true
+      example: null
+    Money:
+      type: string
+      pattern: ^(0|[1-9][0-9]{0,16})\.[0-9]{2}$
+      description: Неотрицательная сумма в рублях, numeric(19,2), ровно два дробных знака.
+      example: '1000.00'
+    MoneyTotal:
+      type: string
+      pattern: ^(0|[1-9][0-9]*)\.[0-9]{2}$
+      description: Неотрицательная агрегированная сумма в рублях. Может превышать точность одного numeric(19,2); ровно
+        два дробных знака.
+      example: '124100.00'
+    PositiveMoney:
+      type: string
+      pattern: ^(0\.(0[1-9]|[1-9][0-9])|[1-9][0-9]{0,16}\.[0-9]{2})$
+      description: Положительная сумма в рублях, numeric(19,2), от 0.01, ровно два дробных знака.
+      example: '1000.00'
+    SignedMoney:
+      type: string
+      pattern: ^-?(0|[1-9][0-9]{0,16})\.[0-9]{2}$
+      description: Сумма в рублях, numeric(19,2) со знаком; технический счёт может иметь отрицательный баланс.
+      example: '-1000.00'
+    Role:
+      type: string
+      enum:
+      - CLIENT
+      - ANALYST
+      - ADMIN
+    AccountState:
+      type: string
+      enum:
+      - ACTIVE
+      - BLOCKED
+      - CLOSED
+    TransferState:
+      type: string
+      enum:
+      - PENDING
+      - FRAUD_CHECK_PENDING
+      - COMPLETING
+      - RELEASING_FUNDS
+      - COMPLETED
+      - REJECTED
+      - CANCELLED
+    TransferType:
+      type: string
+      enum:
+      - TRANSFER
+      - TOPUP
+      description: Определяется по типу счёта отправителя; отдельный столбец type у transfer не требуется.
+    AutomaticDecision:
+      type: string
+      description: 'Автоматическое решение по riskScore: 0–29 — APPROVED, 30–69 — REVIEW_REQUIRED, 70–100 — REJECTED.'
+      enum:
+      - APPROVED
+      - REVIEW_REQUIRED
+      - REJECTED
+    FinalDecision:
+      type: string
+      enum:
+      - APPROVED
+      - REJECTED
+    NullableFinalDecision:
+      type: string
+      enum:
+      - APPROVED
+      - REJECTED
+      - null
+      nullable: true
+      example: null
+    NullableDecisionSource:
+      type: string
+      enum:
+      - AUTOMATIC
+      - ANALYST
+      - null
+      nullable: true
+      example: null
+    ReviewStatus:
+      type: string
+      enum:
+      - OPEN
+      - IN_PROGRESS
+      - CLOSED
+    IPAddress:
+      type: string
+      minLength: 3
+      maxLength: 45
+      description: IPv4 или IPv6 без маски подсети.
+      example: 203.0.113.10
+    NullableIPAddress:
+      type: string
+      minLength: 3
+      maxLength: 45
+      nullable: true
+      description: IPv4 или IPv6 без маски либо null.
+      example: null
+    NullableDeviceId:
+      type: string
+      minLength: 1
+      pattern: \S
+      nullable: true
+      description: Идентификатор устройства. Отсутствие данных — null или отсутствие поля запроса.
+      example: alice-main
+    Health:
+      type: object
+      required:
+      - status
+      properties:
+        status:
+          type: string
+          enum:
+          - UP
+          - DOWN
+          example: UP
+    AuditEvent:
+      type: object
+      required:
+      - id
+      - occurredAt
+      - actorType
+      - actorId
+      - action
+      - objectType
+      - objectId
+      - details
+      properties:
+        id:
+          type: string
+          minLength: 1
+          example: '42'
+        occurredAt:
+          $ref: '#/components/schemas/DateTime'
+        actorType:
+          type: string
+          enum:
+          - USER
+          - ANALYST
+          - ADMIN
+          - SYSTEM
+        actorId:
+          $ref: '#/components/schemas/NullableUserId'
+        action:
+          type: string
+          minLength: 1
+          example: LIMIT_CHANGED
+        objectType:
+          type: string
+          minLength: 1
+          example: TRANSFER_LIMITS
+        objectId:
+          type: string
+          nullable: true
+          example: '1'
+        details:
+          type: object
+          additionalProperties: true
+          description: Данные по типу действия; денежные значения — строки. Секреты и токены не включаются.
+      description: Нормализованное представление аудита. При actorType=SYSTEM actorId равен null.
+    FieldError:
+      type: object
+      required:
+      - field
+      - message
+      properties:
+        field:
+          type: string
+          example: amount
+        message:
+          type: string
+          example: Сумма должна быть положительной.
+    Problem:
+      type: object
+      required:
+      - type
+      - title
+      - status
+      - code
+      - detail
+      properties:
+        type:
+          type: string
+          format: uri
+          example: urn:ebank:problem:insufficient-funds
+        title:
+          type: string
+          example: Недостаточно средств
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+          example: 409
+        code:
+          type: string
+          pattern: ^[A-Z][A-Z0-9_]*$
+          example: INSUFFICIENT_FUNDS
+        detail:
+          type: string
+          example: На счёте недостаточно доступных средств.
+        instance:
+          type: string
+          example: /api/money/v1/transfers
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+      description: Problem Details (RFC 9457). code и fieldErrors — расширения. SQL-ошибки и секреты не раскрываются.
+  parameters:
+    From:
+      name: from
+      in: query
+      description: Начало периода включительно.
+      required: false
+      schema:
+        $ref: '#/components/schemas/DateTime'
+    To:
+      name: to
+      in: query
+      description: Конец периода исключительно.
+      required: false
+      schema:
+        $ref: '#/components/schemas/DateTime'
+    FromRequired:
+      name: from
+      in: query
+      description: Начало периода включительно. from < to, аналитический период не более 31 суток.
+      required: true
+      schema:
+        $ref: '#/components/schemas/DateTime'
+    ToRequired:
+      name: to
+      in: query
+      description: Конец периода исключительно. from < to, аналитический период не более 31 суток.
+      required: true
+      schema:
+        $ref: '#/components/schemas/DateTime'
+    Limit:
+      name: limit
+      in: query
+      description: Размер страницы.
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+    Offset:
+      name: offset
+      in: query
+      description: Число пропускаемых записей.
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    ActorId:
+      name: actorId
+      in: query
+      description: Исполнитель действия.
+      required: false
+      schema:
+        $ref: '#/components/schemas/UserId'
+    Action:
+      name: action
+      in: query
+      description: Тип действия аудита.
+      required: false
+      schema:
+        type: string
+        minLength: 1
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID одного логического запроса. Повтор с тем же телом возвращает существующий ресурс; другое
+        тело с тем же ключом — 409 IDEMPOTENCY_CONFLICT. Ключ не обязан совпадать с eventId событий Kafka.
+      schema:
+        type: string
+        format: uuid
+        example: aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa
+  responses:
+    Error400:
+      description: Некорректный запрос или фильтры.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:ebank:problem:validation-error
+            title: Некорректный запрос или фильтры.
+            status: 400
+            code: VALIDATION_ERROR
+            detail: Проверьте параметры запроса.
+    Error401:
+      description: Отсутствует действительный access token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:ebank:problem:unauthorized
+            title: Отсутствует действительный access token.
+            status: 401
+            code: UNAUTHORIZED
+            detail: Требуется авторизация.
+      headers:
+        WWW-Authenticate:
+          description: Bearer challenge.
+          schema:
+            type: string
+            example: Bearer
+    Error403:
+      description: Недостаточная роль или запрещённый фильтр.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:ebank:problem:forbidden
+            title: Недостаточная роль или запрещённый фильтр.
+            status: 403
+            code: FORBIDDEN
+            detail: Нет права выполнить операцию.
+    Error404:
+      description: Объект не найден либо недоступен клиенту.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:ebank:problem:not-found
+            title: Объект не найден либо недоступен клиенту.
+            status: 404
+            code: NOT_FOUND
+            detail: Запрошенный объект недоступен.
+    Error409:
+      description: Конфликт состояния, лимита или идемпотентности.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:ebank:problem:conflict
+            title: Конфликт состояния, лимита или идемпотентности.
+            status: 409
+            code: CONFLICT
+            detail: Операция конфликтует с текущим состоянием.
+    Error500:
+      description: Внутренняя ошибка.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: urn:ebank:problem:internal-error
+            title: Внутренняя ошибка.
+            status: 500
+            code: INTERNAL_ERROR
+            detail: Не удалось выполнить запрос.
