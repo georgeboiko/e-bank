@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"e-bank/backend/internal/infrastructure/httpserver"
+	"e-bank/backend/internal/user/httpapi"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/go-chi/chi/v5"
 )
 
 func run(logger *slog.Logger) error {
@@ -24,10 +23,7 @@ func run(logger *slog.Logger) error {
 		addr = "localhost:8080"
 	}
 
-	router := chi.NewRouter()
-	router.Get("/live", httpserver.LiveHandler)
-
-	return httpserver.Run(ctx, logger, addr, router)
+	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter())
 }
 
 func main() {
