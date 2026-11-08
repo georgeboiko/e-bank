@@ -1,0 +1,24 @@
+{
+  "eventId": "019a5d23-c890-7000-8000-000000000004",
+  "eventType": "FraudDecision",
+  "eventVersion": 1,
+  "occurredAt": "2026-11-08T12:05:10Z",
+  "data": {
+    "transferId": 124,
+    "decision": "APPROVED",
+    "riskScore": 45,
+    "source": "ANALYST",
+    "triggeredRules": [
+      {
+        "ruleId": 2,
+        "score": 30,
+        "reason": "Сумма перевода выше сильного порога."
+      },
+      {
+        "ruleId": 3,
+        "score": 15,
+        "reason": "Перевод создан с недавно появившегося устройства."
+      }
+    ]
+  }
+}
