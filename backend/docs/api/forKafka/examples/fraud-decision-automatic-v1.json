@@ -1,0 +1,34 @@
+{
+  "eventId": "019a5d22-1e80-7000-8000-000000000003",
+  "eventType": "FraudDecision",
+  "eventVersion": 1,
+  "occurredAt": "2026-11-08T12:01:02Z",
+  "data": {
+    "transferId": 123,
+    "decision": "REJECTED",
+    "riskScore": 80,
+    "source": "AUTOMATIC",
+    "triggeredRules": [
+      {
+        "ruleId": 1,
+        "score": 15,
+        "reason": "Не менее трёх попыток перевода за две минуты."
+      },
+      {
+        "ruleId": 2,
+        "score": 30,
+        "reason": "Сумма перевода выше сильного порога."
+      },
+      {
+        "ruleId": 6,
+        "score": 20,
+        "reason": "Устройство использовалось несколькими клиентами."
+      },
+      {
+        "ruleId": 8,
+        "score": 15,
+        "reason": "Расстояние от предыдущего входа превышает порог."
+      }
+    ]
+  }
+}
