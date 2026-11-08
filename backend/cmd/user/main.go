@@ -1,27 +1,35 @@
 package main
 
 import (
-	"context"
+	"e-bank/backend/internal/infrastructure/config"
+	"e-bank/backend/internal/infrastructure/db/postgres"
 	"e-bank/backend/internal/infrastructure/httpserver"
+	"e-bank/backend/internal/infrastructure/util"
 	"e-bank/backend/internal/user/httpapi"
 	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
+)
+
+const (
+	Service = "USER"
+	Port    = 8080
 )
 
 func run(logger *slog.Logger) error {
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		os.Interrupt,
-		syscall.SIGTERM,
-	)
+	ctx, stop := util.NotifyShutdown()
 	defer stop()
 
-	addr := os.Getenv("USER_HTTP_ADDR")
-	if addr == "" {
-		addr = "localhost:8080"
+	addr := config.GetAddr(Service, Port)
+	datasource, err := config.GetDatasource(Service)
+	if err != nil {
+		return err
 	}
+
+	pool, err := postgres.NewPool(ctx, datasource)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
 
 	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter())
 }
