@@ -1,27 +1,35 @@
 package main
 
 import (
-	"context"
 	"e-bank/backend/internal/antifraud/httpapi"
+	"e-bank/backend/internal/infrastructure/config"
+	"e-bank/backend/internal/infrastructure/db/postgres"
 	"e-bank/backend/internal/infrastructure/httpserver"
+	"e-bank/backend/internal/infrastructure/util"
 	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
+)
+
+const (
+	Service = "ANTIFRAUD"
+	Port    = 8082
 )
 
 func run(logger *slog.Logger) error {
-	ctx, stop := signal.NotifyContext(
-		context.Background(),
-		os.Interrupt,
-		syscall.SIGTERM,
-	)
+	ctx, stop := util.NotifyShutdown()
 	defer stop()
 
-	addr := os.Getenv("ANTIFRAUD_HTTP_ADDR")
-	if addr == "" {
-		addr = "localhost:8082"
+	addr := config.GetAddr(Service, Port)
+	datasource, err := config.GetDatasource(Service)
+	if err != nil {
+		return err
 	}
+
+	pool, err := postgres.NewPool(ctx, datasource)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
 
 	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter())
 }
