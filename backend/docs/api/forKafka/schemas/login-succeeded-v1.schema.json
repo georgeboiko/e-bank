@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://e-bank.local/schemas/kafka/login-succeeded-v1.schema.json",
+  "title": "LoginSucceeded v1",
+  "description": "Successful user login published by User for Antifraud.",
+  "type": "object",
+  "required": ["eventId", "eventType", "eventVersion", "occurredAt", "data"],
+  "properties": {
+    "eventId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUIDv7 generated once when the Outbox record is created."
+    },
+    "eventType": {
+      "const": "LoginSucceeded"
+    },
+    "eventVersion": {
+      "const": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "data": {
+      "type": "object",
+      "required": ["userId", "ipAddress"],
+      "properties": {
+        "userId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S",
+          "description": "Opaque Keycloak sub; UUID format is not required."
+        },
+        "ipAddress": {
+          "type": "string",
+          "anyOf": [
+            { "format": "ipv4" },
+            { "format": "ipv6" }
+          ]
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
