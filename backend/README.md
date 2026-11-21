@@ -47,6 +47,20 @@ go run ./cmd/user  # или go run ./cmd/money, go run ./cmd/antifraud
 
 `GET /health` проверяет БД сервиса и возвращает `200 UP` или `503 DOWN`.
 
+## Nginx
+
+При локальном запуске Nginx слушает `127.0.0.1:8088`. Запусти Go-сервисы на портах из таблицы выше, затем из каталога `backend` выполни:
+
+```sh
+nginx -t -c "$PWD/nginx/nginx.conf"
+nginx -c "$PWD/nginx/nginx.conf" -g 'daemon off;'
+```
+
+Проверка проксирования Money — `curl -i http://localhost:8088/api/money/v1/health`. В OpenAPI укажи `origin=http://localhost:8088`.
+
+Для внешнего запуска используй `nginx/nginx.prod.conf`. Укажи реальный `server_name` в обоих блоках и пути к сертификату и ключу. Этот конфиг перенаправляет HTTP на HTTPS и закрывает публичный доступ к `/health`.
+
+
 ## Документация
 
 - [docs/api](docs/api/) — HTTP-контракты OpenAPI и просмотр в Swagger UI
