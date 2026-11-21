@@ -45,7 +45,7 @@ set +a
 go run ./cmd/user  # или go run ./cmd/money, go run ./cmd/antifraud
 ```
 
-`GET /health` проверяет БД сервиса и возвращает `200 UP` или `503 DOWN`.
+`GET /health` доступен без токена, проверяет БД сервиса и возвращает `200 UP` или `503 DOWN`.
 
 ## Nginx
 
