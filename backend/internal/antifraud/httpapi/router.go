@@ -5,11 +5,12 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewRouter() http.Handler {
+func NewRouter(pool *pgxpool.Pool) http.Handler {
 	router := chi.NewRouter()
-	router.Get("/live", httpserver.LiveHandler)
+	router.Get("/health", httpserver.NewHealthHandler(pool).ServeHTTP)
 
 	return router
 }

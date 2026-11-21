@@ -31,7 +31,7 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
-	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter())
+	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool))
 }
 
 func main() {
