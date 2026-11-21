@@ -1,13 +1,16 @@
 package main
 
 import (
+	"log/slog"
+	"os"
+
 	"e-bank/backend/internal/infrastructure/config"
 	"e-bank/backend/internal/infrastructure/db/postgres"
 	"e-bank/backend/internal/infrastructure/httpserver"
 	"e-bank/backend/internal/infrastructure/util"
 	"e-bank/backend/internal/money/httpapi"
-	"log/slog"
-	"os"
+	"e-bank/backend/internal/money/repositories"
+	"e-bank/backend/internal/money/services"
 )
 
 const (
@@ -31,7 +34,9 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
-	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool))
+	accountRepository := repositories.NewAccountRepository(pool)
+	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
+	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, accountService))
 }
 
 func main() {

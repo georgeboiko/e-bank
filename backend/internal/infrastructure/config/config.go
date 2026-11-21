@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+const MoneyMaxAccountsPerClient = 10
+
 func GetDatasource(service string) (string, error) {
 	for _, suffix := range []string{"ADDR", "USER", "PASSWORD", "NAME"} {
 		key := service + "_DB_" + suffix
