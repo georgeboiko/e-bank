@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://e-bank.local/schemas/kafka/fraud-check-requested-v1.schema.json",
-  "title": "FraudCheckRequested v1",
+  "$id": "https://e-bank.local/schemas/kafka/fraud-check-requested.schema.json",
+  "title": "FraudCheckRequested",
   "description": "Transfer fraud check requested by Money from Antifraud.",
   "type": "object",
-  "required": ["eventId", "eventType", "eventVersion", "occurredAt", "data"],
+  "required": ["eventId", "eventType", "occurredAt", "data"],
   "properties": {
     "eventId": {
       "type": "string",
@@ -13,9 +13,6 @@
     },
     "eventType": {
       "const": "FraudCheckRequested"
-    },
-    "eventVersion": {
-      "const": 1
     },
     "occurredAt": {
       "type": "string",
