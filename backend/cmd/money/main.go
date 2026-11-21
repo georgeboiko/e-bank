@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"os"
 
+	"e-bank/backend/internal/infrastructure/auth"
 	"e-bank/backend/internal/infrastructure/config"
 	"e-bank/backend/internal/infrastructure/db/postgres"
 	"e-bank/backend/internal/infrastructure/httpserver"
@@ -23,6 +24,11 @@ func run(logger *slog.Logger) error {
 	defer stop()
 
 	addr := config.GetAddr(Service, Port)
+	authenticate, err := auth.NewJWTMiddleware(os.Getenv("KEYCLOAK_ISSUER"), os.Getenv("KEYCLOAK_AUDIENCE"))
+	if err != nil {
+		return err
+	}
+
 	datasource, err := config.GetDatasource(Service)
 	if err != nil {
 		return err
@@ -36,7 +42,7 @@ func run(logger *slog.Logger) error {
 
 	accountRepository := repositories.NewAccountRepository(pool)
 	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
-	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, accountService))
+	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService))
 }
 
 func main() {

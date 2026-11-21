@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -15,6 +16,13 @@ type HealthHandler struct {
 
 func NewHealthHandler(pool *pgxpool.Pool) *HealthHandler {
 	return &HealthHandler{pool: pool}
+}
+
+func WithHealth(pool *pgxpool.Pool, handler http.Handler) http.Handler {
+	router := chi.NewRouter()
+	router.Get("/health", NewHealthHandler(pool).ServeHTTP)
+	router.Mount("/", handler)
+	return router
 }
 
 func (h *HealthHandler) ServeHTTP(
