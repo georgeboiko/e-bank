@@ -1,7 +1,7 @@
 {
   "eventId": "019a5d22-1e80-7000-8000-000000000003",
   "eventType": "FraudDecision",
-  "occurredAt": "2026-11-08T12:01:02Z",
+  "occurredAt": "2026-11-08T08:01:02-04:00",
   "data": {
     "transferId": 123,
     "decision": "REJECTED",

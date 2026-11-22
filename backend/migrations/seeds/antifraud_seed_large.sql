@@ -50,25 +50,50 @@ SELECT 1000000 + n * 100, 'bulk-analyst',
            timestamptz '2026-11-01 00:00+03' - n * interval '100 minutes' + interval '1 minute' END
 FROM generate_series(1, 1000) AS n;
 
+WITH events AS MATERIALIZED (
+    SELECT uuidv7() AS event_id, id AS check_id, transfer_id, automatic_decision, risk_score, checked_at
+    FROM antifraud_check
+    WHERE id BETWEEN 1000001 AND 1100000
+)
 INSERT INTO outbox_event (event_id, check_id, payload, created_at, published,
     attempt_count, next_attempt_at, published_at)
-SELECT uuidv7(), 1000000 + n, '{}'::jsonb,
-       timestamptz '2026-11-01 00:00+03' - n * interval '1 minute', n % 100 <> 0, 1,
-       now() + CASE WHEN n % 200 = 0 THEN interval '5 minutes' ELSE interval '-1 minute' END,
-       CASE WHEN n % 100 <> 0 THEN
-           timestamptz '2026-11-01 00:00+03' - n * interval '1 minute' + interval '1 second' END
-FROM generate_series(1, 100000) AS n;
+SELECT event_id, check_id, jsonb_build_object(
+           'eventId', event_id, 'eventType', 'FraudDecision',
+           'occurredAt', checked_at,
+           'data', jsonb_build_object(
+               'transferId', transfer_id, 'decision', automatic_decision, 'riskScore', risk_score,
+               'source', 'AUTOMATIC', 'triggeredRules', '[]'::jsonb
+           )
+       ), checked_at, check_id % 100 <> 0, 1,
+       now() + CASE WHEN check_id % 200 = 0 THEN interval '5 minutes' ELSE interval '-1 minute' END,
+       CASE WHEN check_id % 100 <> 0 THEN checked_at + interval '1 second' END
+FROM events;
 
 INSERT INTO audit_log (occurred_at, actor_type, action, check_id, details)
 SELECT timestamptz '2026-11-01 00:00+03' - n * interval '1 minute',
        'SYSTEM', 'CHECK_COMPLETED', 1000000 + n, '{}'::jsonb
 FROM generate_series(1, 100000) AS n;
 
+WITH events AS MATERIALIZED (
+    SELECT uuidv7() AS event_id, t.*, sender.owner_id AS sender_id, recipient.owner_id AS recipient_id
+    FROM transfer_attempt t
+    JOIN bank_account sender ON sender.id = t.from_account_id
+    JOIN bank_account recipient ON recipient.id = t.to_account_id
+    WHERE t.id BETWEEN 1000001 AND 1100000
+)
 INSERT INTO inbox_event (event_id, transfer_id, occurred_at, received_at,
     payload, applied, processed_at)
-SELECT uuidv7(), id, created_at, created_at + interval '1 second',
-       '{}'::jsonb, true, created_at + interval '2 seconds'
-FROM transfer_attempt WHERE id BETWEEN 1000001 AND 1100000;
+SELECT event_id, id, created_at, received_at, jsonb_build_object(
+           'eventId', event_id, 'eventType', 'FraudCheckRequested',
+           'occurredAt', created_at,
+           'data', jsonb_build_object(
+               'transferId', id, 'fromAccountId', from_account_id, 'toAccountId', to_account_id,
+               'senderId', sender_id, 'recipientId', recipient_id, 'amount', amount,
+               'deviceId', device, 'ipAddress', host(ip_address),
+               'createdAt', created_at
+           )
+       ), true, created_at + interval '2 seconds'
+FROM events;
 
 SELECT setval('user_device_id_seq', (SELECT max(id) FROM user_device));
 SELECT setval('login_event_id_seq', (SELECT max(id) FROM login_event));

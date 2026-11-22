@@ -10,8 +10,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-const accountColumns = `id, owner_id, type, state, balance::text AS balance, reserved_sum::text AS reserved_sum,
-	(balance - reserved_sum)::text AS available_balance, opened_at`
+const accountColumns = `id, owner_id, type, state, balance, reserved_sum,
+	(balance - reserved_sum) AS available_balance, opened_at`
 
 type AccountRepository struct {
 	pool *pgxpool.Pool
