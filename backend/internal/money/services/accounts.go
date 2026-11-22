@@ -40,3 +40,26 @@ func (s *AccountService) OpenAccount(ctx context.Context, ownerID string) (model
 
 	return account, nil
 }
+
+func (s *AccountService) ListAccounts(ctx context.Context, subject string, admin bool, filter models.AccountListFilter) ([]models.Account, bool, error) {
+	if !admin {
+		filter.OwnerID = &subject
+	}
+	accounts, err := s.repository.ListAccounts(ctx, filter.OwnerID, filter.State, filter.Limit+1, filter.Offset)
+	if err != nil {
+		return nil, false, fmt.Errorf("list accounts: %w", err)
+	}
+	hasMore := len(accounts) > filter.Limit
+	if hasMore {
+		accounts = accounts[:filter.Limit]
+	}
+	return accounts, hasMore, nil
+}
+
+func (s *AccountService) GetAccount(ctx context.Context, subject string, admin bool, id int32) (models.Account, error) {
+	var ownerID *string
+	if !admin {
+		ownerID = &subject
+	}
+	return s.repository.GetAccount(ctx, id, ownerID)
+}
