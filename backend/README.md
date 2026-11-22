@@ -61,6 +61,39 @@ nginx -c "$PWD/nginx/nginx.conf" -g 'daemon off;'
 Для внешнего запуска используй `nginx/nginx.prod.conf`. Укажи реальный `server_name` в обоих блоках и пути к сертификату и ключу. Этот конфиг перенаправляет HTTP на HTTPS и закрывает публичный доступ к `/health`.
 
 
+## Keycloak
+
+Keycloak запускается отдельно от прикладных БД и Kafka. В `.env.test` добавь свои значения:
+
+```dotenv
+KEYCLOAK_DB_PASSWORD=
+KEYCLOAK_ADMIN_USER=
+KEYCLOAK_ADMIN_PASSWORD=
+KEYCLOAK_EVENTS_CLIENT_SECRET=
+KEYCLOAK_TEST_CLIENT_PASSWORD=
+KEYCLOAK_TEST_ANALYST_PASSWORD=
+KEYCLOAK_TEST_ADMIN_PASSWORD=
+KEYCLOAK_PROXY_TRUSTED_ADDRESSES=127.0.0.1
+KEYCLOAK_ISSUER=http://localhost:8088/auth/realms/ebank
+KEYCLOAK_AUDIENCE=ebank-api
+KEYCLOAK_LOGIN_CLIENT_ID=ebank-web
+KEYCLOAK_EVENTS_CLIENT_ID=ebank-user-service
+KEYCLOAK_EVENTS_REALM_URL=http://127.0.0.1:8083/auth/realms/ebank
+```
+
+`KEYCLOAK_PROXY_TRUSTED_ADDRESSES` — адрес Nginx, который видит контейнер Keycloak. При пробросе порта через Docker это может быть адрес шлюза сети Compose. После первого запуска узнай его командой `docker network inspect ebank-keycloak_default --format '{{(index .IPAM.Config 0).Gateway}}'`. Если соединение приходит через этот шлюз, укажи его вместо `127.0.0.1` и повтори `up -d`. Keycloak принимает X-Forwarded-For только от указанных адресов, чтобы сохранить IP клиента в событии входа.
+
+Из `backend` запусти Keycloak и [Nginx](#nginx).
+
+```sh
+docker compose --env-file .env.test -f keycloak/compose.yaml up -d
+curl --fail http://localhost:8088/auth/realms/ebank/.well-known/openid-configuration
+```
+
+Realm `ebank` импортируется при первом запуске. Тестовые пользователи `test-client`, `test-analyst` и `test-admin` имеют роли `CLIENT`, `ANALYST` и `ADMIN` соответственно. Клиент `ebank-web` использует Authorization Code с PKCE S256. Локальный origin — `http://localhost:3000`, callback — `http://localhost:3000/auth/callback`. Access token выдаётся на 15 минут с audience `ebank-api`. Технический клиент `ebank-user-service` использует Client Credentials со scope `kc-admin-api`. Роль `view-events` позволяет читать сохранённые `LOGIN`, а `manage-users` — управлять ролями и доступом пользователей.
+
+Для внешнего запуска задай `KEYCLOAK_PUBLIC_URL` с HTTPS и путём `/auth`. У сервисов укажи соответствующий `KEYCLOAK_ISSUER`, а для фронтенда — `KEYCLOAK_WEB_ORIGIN` и `KEYCLOAK_WEB_REDIRECT_URI`. Если фронтенд и Keycloak на одном домене, используй callback вне `/auth/`, например `/oidc/callback`. Снаружи Nginx закрывает `/auth/admin/`. User обращается к Admin API через локальный порт 8083. Настройки импорта применяются при создании realm. Дальнейшие изменения существующего realm вносятся через администрирование Keycloak.
+
 ## Документация
 
 - [docs/api](docs/api/) — HTTP-контракты OpenAPI и просмотр в Swagger UI
