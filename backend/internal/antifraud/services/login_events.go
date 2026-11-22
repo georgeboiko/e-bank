@@ -12,7 +12,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
-func applyLoginSucceeded(ctx context.Context, pool *pgxpool.Pool, record *kgo.Record) error {
+func applyLoginSucceeded(ctx context.Context, pool *pgxpool.Pool, resolver GeoResolver, record *kgo.Record) error {
 	event, err := kafka.Decode[kafka.LoginSucceededData](record.Value, kafka.EventLoginSucceeded)
 	if err != nil {
 		return err
@@ -26,5 +26,6 @@ func applyLoginSucceeded(ctx context.Context, pool *pgxpool.Pool, record *kgo.Re
 	if !event.Data.IPAddress.IsValid() || event.Data.IPAddress.Zone() != "" {
 		return errors.New("LoginSucceeded ipAddress must be an IPv4 or IPv6 address")
 	}
-	return repositories.StoreLogin(ctx, pool, event, record.Value)
+	geo := resolver.Resolve(ctx, event.Data.IPAddress)
+	return repositories.StoreLogin(ctx, pool, event, record.Value, geo)
 }

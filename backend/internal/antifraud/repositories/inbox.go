@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"time"
 
+	"e-bank/backend/internal/antifraud/models"
 	"e-bank/backend/internal/contracts/kafka"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func StoreTransferAttempt(ctx context.Context, pool *pgxpool.Pool, event kafka.FraudCheckRequested, payload []byte) error {
+func StoreTransferAttempt(ctx context.Context, pool *pgxpool.Pool, event kafka.FraudCheckRequested, payload []byte, geo models.Geo) error {
 	return pgx.BeginTxFunc(ctx, pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
 		apply, err := beginInboxEvent(ctx, tx, event.EventID, event.OccurredAt, payload)
 		if err != nil || !apply {
@@ -22,7 +23,7 @@ func StoreTransferAttempt(ctx context.Context, pool *pgxpool.Pool, event kafka.F
 		if err := storeAccountOwners(ctx, tx, data); err != nil {
 			return err
 		}
-		if err := storeAttempt(ctx, tx, data); err != nil {
+		if err := storeAttempt(ctx, tx, data, geo); err != nil {
 			return err
 		}
 
@@ -103,13 +104,16 @@ func storeAccountOwners(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckReq
 	return nil
 }
 
-func storeAttempt(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckRequestedData) error {
+func storeAttempt(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckRequestedData, geo models.Geo) error {
 	args := []any{data.TransferID, data.FromAccountID, data.ToAccountID, data.Amount.String(), data.DeviceID, data.IPAddress, data.CreatedAt}
 	attempt, err := tx.Exec(ctx, `
-		INSERT INTO transfer_attempt (id, from_account_id, to_account_id, amount, device, ip_address, created_at)
-		VALUES ($1, $2, $3, $4::text::numeric, $5, $6, $7)
+		INSERT INTO transfer_attempt (
+			id, from_account_id, to_account_id, amount, device, ip_address, created_at,
+			latitude, longitude, geo_status, geo_resolved_at
+		)
+		VALUES ($1, $2, $3, $4::text::numeric, $5, $6, $7, $8::double precision, $9::double precision, $10, $11)
 		ON CONFLICT (id) DO NOTHING
-	`, args...)
+	`, append(args, geo.Latitude, geo.Longitude, geo.Status, geo.ResolvedAt)...)
 	if err != nil {
 		return fmt.Errorf("insert transfer attempt: %w", err)
 	}
