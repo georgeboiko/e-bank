@@ -1,5 +1,17 @@
 BEGIN;
 
+CREATE OR REPLACE FUNCTION antifraud_triggered_rules(p_check_id integer)
+RETURNS jsonb LANGUAGE sql STABLE AS $$
+    SELECT coalesce(
+        jsonb_agg(jsonb_build_object(
+            'ruleId', rule_id, 'score', score, 'reason', reason
+        ) ORDER BY rule_id),
+        '[]'::jsonb
+    )
+    FROM rule_evaluation
+    WHERE check_id = p_check_id AND status = 'TRIGGERED';
+$$;
+
 CREATE OR REPLACE FUNCTION save_antifraud_check(
     p_transfer_id integer,
     p_scores integer[],
@@ -61,12 +73,16 @@ BEGIN
     IF decision = 'REVIEW_REQUIRED' THEN
         INSERT INTO review_case (check_id, created_at) VALUES (check_id_created, operation_at);
     ELSE
+        IF uuid_extract_version(p_event_id) IS DISTINCT FROM 7 THEN
+            RAISE EXCEPTION 'Идентификатор события должен быть UUIDv7';
+        END IF;
+
         INSERT INTO outbox_event (event_id, check_id, payload, created_at)
         VALUES (p_event_id, check_id_created, jsonb_build_object(
             'eventId', p_event_id, 'eventType', 'FraudDecision', 'occurredAt', operation_at,
             'data', jsonb_build_object(
                 'transferId', p_transfer_id, 'decision', decision, 'riskScore', total_score,
-                'source', 'AUTOMATIC'
+                'source', 'AUTOMATIC', 'triggeredRules', antifraud_triggered_rules(check_id_created)
             )
         ), operation_at);
     END IF;
@@ -109,6 +125,9 @@ BEGIN
     IF current_case.analyst_id IS NOT NULL AND current_case.analyst_id <> p_analyst_id THEN
         RAISE EXCEPTION 'Разбор % назначен другому аналитику', p_case_id;
     END IF;
+    IF uuid_extract_version(p_event_id) IS DISTINCT FROM 7 THEN
+        RAISE EXCEPTION 'Идентификатор события должен быть UUIDv7';
+    END IF;
 
     INSERT INTO app_user (id) VALUES (p_analyst_id) ON CONFLICT DO NOTHING;
     SELECT * INTO current_check FROM antifraud_check WHERE id = current_case.check_id;
@@ -122,7 +141,8 @@ BEGIN
         'eventId', p_event_id, 'eventType', 'FraudDecision', 'occurredAt', operation_at,
         'data', jsonb_build_object(
             'transferId', current_check.transfer_id, 'decision', p_decision,
-            'riskScore', current_check.risk_score, 'source', 'ANALYST'
+            'riskScore', current_check.risk_score, 'source', 'ANALYST',
+            'triggeredRules', antifraud_triggered_rules(current_check.id)
         )
     ), operation_at);
     INSERT INTO audit_log (occurred_at, actor_type, actor_id, action, check_id, details)

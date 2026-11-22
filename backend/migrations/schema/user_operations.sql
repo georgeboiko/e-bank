@@ -10,6 +10,10 @@ RETURNS integer LANGUAGE plpgsql AS $$
 DECLARE
     login_id integer;
 BEGIN
+    IF uuid_extract_version(p_event_id) IS DISTINCT FROM 7 THEN
+        RAISE EXCEPTION 'Идентификатор события должен быть UUIDv7';
+    END IF;
+
     INSERT INTO user_login (keycloak_sub, logined_at, ip)
     VALUES (p_sub, p_at, p_ip)
     RETURNING id INTO login_id;

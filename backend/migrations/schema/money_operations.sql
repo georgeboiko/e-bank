@@ -107,6 +107,10 @@ BEGIN
     UPDATE transfer SET state = 'FRAUD_CHECK_PENDING', updated_at = operation_at
     WHERE id = transfer_id_created;
 
+    IF uuid_extract_version(p_event_id) IS DISTINCT FROM 7 THEN
+        RAISE EXCEPTION 'Идентификатор события должен быть UUIDv7';
+    END IF;
+
     INSERT INTO outbox_event (event_id, transfer_id, payload, created_at)
     VALUES (p_event_id, transfer_id_created, jsonb_build_object(
         'eventId', p_event_id, 'eventType', 'FraudCheckRequested', 'occurredAt', operation_at,
@@ -114,7 +118,7 @@ BEGIN
             'transferId', transfer_id_created,
             'fromAccountId', sender.id, 'toAccountId', recipient.id,
             'senderId', sender.owner_id, 'recipientId', recipient.owner_id,
-            'amount', p_amount, 'deviceId', p_device_id,
+            'amount', p_amount::numeric(19,2), 'deviceId', p_device_id,
             'ipAddress', host(p_ip_address), 'createdAt', operation_at
         )
     ), operation_at);
@@ -123,22 +127,29 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE apply_antifraud_decision(
-    p_event_id uuid,
-    p_transfer_id integer,
-    p_decision text,
-    p_risk_score integer,
-    p_occurred_at timestamptz,
-    p_source text
-)
+CREATE OR REPLACE PROCEDURE apply_antifraud_decision(p_payload jsonb)
 LANGUAGE plpgsql AS $$
 DECLARE
+    p_event_id uuid := (p_payload->>'eventId')::uuid;
+    p_transfer_id integer := (p_payload->'data'->>'transferId')::integer;
+    p_decision text := p_payload->'data'->>'decision';
+    p_risk_score integer := (p_payload->'data'->>'riskScore')::integer;
+    p_occurred_at timestamptz := (p_payload->>'occurredAt')::timestamptz;
+    p_source text := p_payload->'data'->>'source';
     current_transfer transfer%ROWTYPE;
     received_event inbox_event%ROWTYPE;
     inserted_event_id uuid;
-    event_payload jsonb;
     operation_at timestamptz;
 BEGIN
+    IF jsonb_typeof(p_payload) IS DISTINCT FROM 'object'
+       OR p_payload->>'eventType' IS DISTINCT FROM 'FraudDecision'
+       OR jsonb_typeof(p_payload->'data') IS DISTINCT FROM 'object'
+       OR jsonb_typeof(p_payload->'data'->'triggeredRules') IS DISTINCT FROM 'array' THEN
+        RAISE EXCEPTION 'Требуется сообщение FraudDecision с массивом triggeredRules';
+    END IF;
+    IF uuid_extract_version(p_event_id) IS DISTINCT FROM 7 THEN
+        RAISE EXCEPTION 'Идентификатор события должен быть UUIDv7';
+    END IF;
     IF p_decision IS NULL OR p_decision NOT IN ('APPROVED', 'REJECTED')
        OR p_risk_score IS NULL OR p_risk_score NOT BETWEEN 0 AND 100
        OR p_occurred_at IS NULL THEN
@@ -153,25 +164,14 @@ BEGIN
         RAISE EXCEPTION 'Перевод % не найден', p_transfer_id;
     END IF;
 
-    event_payload := jsonb_build_object(
-        'eventId', p_event_id, 'eventType', 'FraudDecision', 'occurredAt', p_occurred_at,
-        'data', jsonb_build_object(
-            'transferId', p_transfer_id, 'decision', p_decision, 'riskScore', p_risk_score,
-            'source', p_source
-        )
-    );
     INSERT INTO inbox_event (event_id, transfer_id, payload)
-    VALUES (p_event_id, p_transfer_id, event_payload)
+    VALUES (p_event_id, p_transfer_id, p_payload)
     ON CONFLICT DO NOTHING RETURNING event_id INTO inserted_event_id;
 
     IF inserted_event_id IS NULL THEN
         SELECT * INTO received_event FROM inbox_event WHERE event_id = p_event_id;
         IF NOT FOUND OR received_event.transfer_id IS DISTINCT FROM p_transfer_id
-           OR received_event.payload->>'eventType' IS DISTINCT FROM 'FraudDecision'
-           OR received_event.payload->'data'->>'decision' IS DISTINCT FROM p_decision
-           OR received_event.payload->'data'->>'source' IS DISTINCT FROM p_source
-           OR (received_event.payload->'data'->>'riskScore')::integer IS DISTINCT FROM p_risk_score
-           OR (received_event.payload->>'occurredAt')::timestamptz IS DISTINCT FROM p_occurred_at THEN
+           OR received_event.payload IS DISTINCT FROM p_payload THEN
             RAISE EXCEPTION 'Событие или перевод уже зарегистрированы с другими данными';
         END IF;
         IF received_event.applied THEN
