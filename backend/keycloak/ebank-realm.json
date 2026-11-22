@@ -1,0 +1,120 @@
+{
+  "realm": "ebank",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": true,
+  "accessTokenLifespan": 900,
+  "eventsEnabled": true,
+  "enabledEventTypes": ["LOGIN"],
+  "eventsExpiration": 604800,
+  "roles": {
+    "realm": [
+      {"name": "CLIENT"},
+      {"name": "ANALYST"},
+      {"name": "ADMIN"}
+    ]
+  },
+  "defaultRoles": ["CLIENT"],
+  "clients": [
+    {
+      "clientId": "ebank-web",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "fullScopeAllowed": false,
+      "redirectUris": ["${KEYCLOAK_WEB_REDIRECT_URI}"],
+      "webOrigins": ["${KEYCLOAK_WEB_ORIGIN}"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${KEYCLOAK_WEB_ORIGIN}/"
+      },
+      "protocolMappers": [
+        {
+          "name": "ebank-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "ebank-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "ebank-user-service",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${KEYCLOAK_EVENTS_CLIENT_SECRET}",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "fullScopeAllowed": false,
+      "defaultClientScopes": ["roles", "kc-admin-api"]
+    }
+  ],
+  "scopeMappings": [
+    {
+      "client": "ebank-web",
+      "roles": ["CLIENT", "ANALYST", "ADMIN"]
+    }
+  ],
+  "clientScopeMappings": {
+    "realm-management": [
+      {
+        "client": "ebank-user-service",
+        "roles": ["view-events", "manage-users"]
+      }
+    ]
+  },
+  "users": [
+    {
+      "username": "service-account-ebank-user-service",
+      "enabled": true,
+      "serviceAccountClientId": "ebank-user-service",
+      "clientRoles": {
+        "realm-management": ["view-events", "manage-users"]
+      }
+    },
+    {
+      "username": "test-client",
+      "enabled": true,
+      "email": "client@ebank.example.invalid",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Client",
+      "realmRoles": ["CLIENT"],
+      "credentials": [
+        {"type": "password", "value": "${KEYCLOAK_TEST_CLIENT_PASSWORD}", "temporary": false}
+      ]
+    },
+    {
+      "username": "test-analyst",
+      "enabled": true,
+      "email": "analyst@ebank.example.invalid",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Analyst",
+      "realmRoles": ["ANALYST"],
+      "credentials": [
+        {"type": "password", "value": "${KEYCLOAK_TEST_ANALYST_PASSWORD}", "temporary": false}
+      ]
+    },
+    {
+      "username": "test-admin",
+      "enabled": true,
+      "email": "admin@ebank.example.invalid",
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Admin",
+      "realmRoles": ["ADMIN"],
+      "credentials": [
+        {"type": "password", "value": "${KEYCLOAK_TEST_ADMIN_PASSWORD}", "temporary": false}
+      ]
+    }
+  ]
+}
