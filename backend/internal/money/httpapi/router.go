@@ -11,9 +11,16 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewRouter(pool *pgxpool.Pool, authenticate func(http.Handler) http.Handler, accountService *services.AccountService) http.Handler {
+func NewRouter(
+	pool *pgxpool.Pool,
+	authenticate func(http.Handler) http.Handler,
+	accountService *services.AccountService,
+	transferService *services.TransferService,
+) http.Handler {
 	router := chi.NewRouter()
-	router.With(auth.RequireRole("CLIENT")).Post("/accounts", openAccountHandler(accountService))
+	client := router.With(auth.RequireRole("CLIENT"))
+	client.Post("/accounts", openAccountHandler(accountService))
+	client.Post("/transfers", createTransferHandler(transferService))
 	readAccounts := router.With(auth.RequireRole("CLIENT", "ADMIN"))
 	readAccounts.Get("/accounts", listAccountsHandler(accountService))
 	readAccounts.Get("/accounts/{accountId}", getAccountHandler(accountService))

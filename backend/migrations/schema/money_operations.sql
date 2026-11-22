@@ -25,27 +25,31 @@ DECLARE
 BEGIN
     IF p_amount IS NULL OR p_amount <= 0 OR p_amount = 'NaN'::numeric
        OR p_amount <> round(p_amount, 2) THEN
-        RAISE EXCEPTION 'Сумма должна быть положительной и содержать не более двух дробных знаков';
+        RAISE EXCEPTION 'Сумма должна быть положительной и содержать не более двух дробных знаков'
+            USING ERRCODE = '22023';
     END IF;
     IF p_from_account_id = p_to_account_id THEN
-        RAISE EXCEPTION 'Счета отправителя и получателя должны различаться';
+        RAISE EXCEPTION 'Счета отправителя и получателя должны различаться'
+            USING ERRCODE = '22023';
     END IF;
     PERFORM id FROM account
     WHERE owner_id = p_actor_id OR id IN (p_from_account_id, p_to_account_id)
     ORDER BY id FOR UPDATE;
 
-    SELECT * INTO sender FROM account WHERE id = p_from_account_id;
-    IF NOT FOUND OR sender.type <> 'CLIENT'
-       OR sender.owner_id IS DISTINCT FROM p_actor_id THEN
-        RAISE EXCEPTION 'Клиентский счёт отправителя не найден или принадлежит другому пользователю';
-    END IF;
-    SELECT * INTO recipient FROM account WHERE id = p_to_account_id;
-    IF NOT FOUND OR recipient.type <> 'CLIENT' THEN
-        RAISE EXCEPTION 'Клиентский счёт получателя не найден';
-    END IF;
-
     SELECT * INTO existing_transfer FROM transfer WHERE idempotency_key = p_idempotency_key;
     IF NOT FOUND THEN
+        SELECT * INTO sender FROM account WHERE id = p_from_account_id;
+        IF NOT FOUND OR sender.type <> 'CLIENT'
+           OR sender.owner_id IS DISTINCT FROM p_actor_id THEN
+            RAISE EXCEPTION 'Клиентский счёт отправителя не найден или принадлежит другому пользователю'
+                USING ERRCODE = 'P0002';
+        END IF;
+        SELECT * INTO recipient FROM account WHERE id = p_to_account_id;
+        IF NOT FOUND OR recipient.type <> 'CLIENT' THEN
+            RAISE EXCEPTION 'Клиентский счёт получателя не найден'
+                USING ERRCODE = 'P0002';
+        END IF;
+
         operation_at := clock_timestamp();
         INSERT INTO transfer (
             from_account_id, to_account_id, amount, idempotency_key,
@@ -63,20 +67,29 @@ BEGIN
     END IF;
 
     IF transfer_id_created IS NULL THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM account
+            WHERE id = existing_transfer.from_account_id
+              AND type = 'CLIENT' AND owner_id = p_actor_id
+        ) THEN
+            RAISE EXCEPTION 'Клиентский счёт отправителя не найден или принадлежит другому пользователю'
+                USING ERRCODE = 'P0002';
+        END IF;
         IF ROW(existing_transfer.from_account_id, existing_transfer.to_account_id,
-               existing_transfer.amount, existing_transfer.device_id, existing_transfer.ip_address)
+               existing_transfer.amount, existing_transfer.device_id)
            IS DISTINCT FROM
-           ROW(p_from_account_id, p_to_account_id, p_amount, p_device_id, p_ip_address) THEN
-            RAISE EXCEPTION 'Ключ идемпотентности уже использован для другого запроса';
+           ROW(p_from_account_id, p_to_account_id, p_amount, p_device_id) THEN
+            RAISE EXCEPTION 'Ключ идемпотентности уже использован для другого запроса'
+                USING ERRCODE = 'P3311';
         END IF;
         RETURN existing_transfer.id;
     END IF;
 
     IF sender.state <> 'ACTIVE' OR recipient.state <> 'ACTIVE' THEN
-        RAISE EXCEPTION 'Оба счёта должны быть активны';
+        RAISE EXCEPTION 'Оба счёта должны быть активны' USING ERRCODE = 'P3312';
     END IF;
     IF sender.balance - sender.reserved_sum < p_amount THEN
-        RAISE EXCEPTION 'Недостаточно доступных средств';
+        RAISE EXCEPTION 'Недостаточно доступных средств' USING ERRCODE = 'P3313';
     END IF;
 
     SELECT * INTO configured_limits FROM transfer_limits WHERE id = 1;
@@ -97,10 +110,10 @@ BEGIN
       AND t.state IN ('FRAUD_CHECK_PENDING', 'COMPLETING', 'COMPLETED', 'RELEASING_FUNDS');
 
     IF daily_used + p_amount > configured_limits.daily_limit THEN
-        RAISE EXCEPTION 'Превышен дневной лимит переводов';
+        RAISE EXCEPTION 'Превышен дневной лимит переводов' USING ERRCODE = 'P3314';
     END IF;
     IF monthly_used + p_amount > configured_limits.monthly_limit THEN
-        RAISE EXCEPTION 'Превышен месячный лимит переводов';
+        RAISE EXCEPTION 'Превышен месячный лимит переводов' USING ERRCODE = 'P3314';
     END IF;
 
     UPDATE account SET reserved_sum = reserved_sum + p_amount WHERE id = sender.id;
