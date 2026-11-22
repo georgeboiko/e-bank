@@ -21,7 +21,7 @@ func NewTransferRepository(pool *pgxpool.Pool) *TransferRepository {
 }
 
 func (r *TransferRepository) Create(ctx context.Context, input models.CreateTransfer) (models.Transfer, bool, error) {
-	var transfer models.Transfer
+	transfer := models.Transfer{Type: "TRANSFER"}
 	var created bool
 	err := pgx.BeginTxFunc(ctx, r.pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
 		var transferID int32
@@ -51,6 +51,27 @@ func (r *TransferRepository) Create(ctx context.Context, input models.CreateTran
 		return models.Transfer{}, false, err
 	}
 	return transfer, created, nil
+}
+
+func (r *TransferRepository) Get(ctx context.Context, id int32, ownerID *string) (models.Transfer, error) {
+	rows, err := r.pool.Query(ctx, `
+		SELECT t.id, t.from_account_id, t.to_account_id, t.amount, t.state, t.reject_cause,
+		       t.created_at, t.updated_at, t.finished_at,
+		       CASE sender.type WHEN 'TECHNICAL' THEN 'TOPUP' ELSE 'TRANSFER' END AS type
+		FROM transfer AS t
+		JOIN account AS sender ON sender.id = t.from_account_id
+		JOIN account AS recipient ON recipient.id = t.to_account_id
+		WHERE t.id = $1
+		  AND ($2::text IS NULL OR sender.owner_id = $2 OR recipient.owner_id = $2)
+	`, id, ownerID)
+	if err != nil {
+		return models.Transfer{}, err
+	}
+	transfer, err := pgx.CollectOneRow(rows, pgx.RowToStructByName[models.Transfer])
+	if errors.Is(err, pgx.ErrNoRows) {
+		return models.Transfer{}, models.ErrTransferNotFound
+	}
+	return transfer, err
 }
 
 func transferCreateError(err error) error {

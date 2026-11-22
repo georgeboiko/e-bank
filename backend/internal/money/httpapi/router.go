@@ -21,9 +21,10 @@ func NewRouter(
 	client := router.With(auth.RequireRole("CLIENT"))
 	client.Post("/accounts", openAccountHandler(accountService))
 	client.Post("/transfers", createTransferHandler(transferService))
-	readAccounts := router.With(auth.RequireRole("CLIENT", "ADMIN"))
-	readAccounts.Get("/accounts", listAccountsHandler(accountService))
-	readAccounts.Get("/accounts/{accountId}", getAccountHandler(accountService))
+	read := router.With(auth.RequireRole("CLIENT", "ADMIN"))
+	read.Get("/accounts", listAccountsHandler(accountService))
+	read.Get("/accounts/{accountId}", getAccountHandler(accountService))
+	read.Get("/transfers/{transferId}", getTransferHandler(transferService))
 
 	return httpserver.WithHealth(pool, authenticate(router))
 }

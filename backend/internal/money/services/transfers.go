@@ -23,3 +23,11 @@ func (s *TransferService) CreateTransfer(ctx context.Context, input models.Creat
 	}
 	return transfer, created, nil
 }
+
+func (s *TransferService) GetTransfer(ctx context.Context, subject string, admin bool, id int32) (models.Transfer, error) {
+	var ownerID *string
+	if !admin {
+		ownerID = &subject
+	}
+	return s.repository.Get(ctx, id, ownerID)
+}
