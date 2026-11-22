@@ -16,7 +16,8 @@
     },
     "occurredAt": {
       "type": "string",
-      "format": "date-time"
+      "format": "date-time",
+      "description": "RFC 3339 timestamp with Z or a numeric UTC offset."
     },
     "data": {
       "type": "object",
@@ -68,7 +69,8 @@
         },
         "createdAt": {
           "type": "string",
-          "format": "date-time"
+          "format": "date-time",
+          "description": "RFC 3339 timestamp with Z or a numeric UTC offset."
         }
       },
       "additionalProperties": true

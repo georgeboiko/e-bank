@@ -1,7 +1,7 @@
 {
   "eventId": "019a5d21-1300-7000-8000-000000000002",
   "eventType": "FraudCheckRequested",
-  "occurredAt": "2026-11-08T12:01:00Z",
+  "occurredAt": "2026-11-08T15:01:00+03:00",
   "data": {
     "transferId": 123,
     "fromAccountId": 2,
@@ -11,6 +11,6 @@
     "amount": 1000.00,
     "deviceId": "alice-main",
     "ipAddress": "203.0.113.10",
-    "createdAt": "2026-11-08T12:01:00Z"
+    "createdAt": "2026-11-08T15:01:00+03:00"
   }
 }
