@@ -14,6 +14,9 @@ import (
 func NewRouter(pool *pgxpool.Pool, authenticate func(http.Handler) http.Handler, accountService *services.AccountService) http.Handler {
 	router := chi.NewRouter()
 	router.With(auth.RequireRole("CLIENT")).Post("/accounts", openAccountHandler(accountService))
+	readAccounts := router.With(auth.RequireRole("CLIENT", "ADMIN"))
+	readAccounts.Get("/accounts", listAccountsHandler(accountService))
+	readAccounts.Get("/accounts/{accountId}", getAccountHandler(accountService))
 
 	return httpserver.WithHealth(pool, authenticate(router))
 }
