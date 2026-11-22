@@ -118,9 +118,9 @@ func toAccountResponse(account models.Account) response.Account {
 		OwnerID:          account.OwnerID,
 		Type:             account.Type,
 		State:            account.State,
-		Balance:          account.Balance,
-		ReservedSum:      account.ReservedSum,
-		AvailableBalance: account.AvailableBalance,
+		Balance:          account.Balance.StringFixed(2),
+		ReservedSum:      account.ReservedSum.StringFixed(2),
+		AvailableBalance: account.AvailableBalance.StringFixed(2),
 		OpenedAt:         account.OpenedAt.UTC(),
 	}
 }

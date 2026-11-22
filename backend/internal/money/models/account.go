@@ -3,6 +3,8 @@ package models
 import (
 	"errors"
 	"time"
+
+	"github.com/shopspring/decimal"
 )
 
 var (
@@ -15,9 +17,9 @@ type Account struct {
 	OwnerID          *string
 	Type             string
 	State            string
-	Balance          string
-	ReservedSum      string
-	AvailableBalance string
+	Balance          decimal.Decimal
+	ReservedSum      decimal.Decimal
+	AvailableBalance decimal.Decimal
 	OpenedAt         time.Time
 }
 
