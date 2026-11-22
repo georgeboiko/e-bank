@@ -14,6 +14,7 @@ var (
 	ErrInactiveAccount     = errors.New("transfer account is inactive")
 	ErrInsufficientFunds   = errors.New("insufficient funds")
 	ErrTransferLimit       = errors.New("transfer limit exceeded")
+	ErrTransferNotFound    = errors.New("transfer not found")
 )
 
 type CreateTransfer struct {
@@ -28,6 +29,7 @@ type CreateTransfer struct {
 
 type Transfer struct {
 	ID            int32
+	Type          string
 	FromAccountID int32
 	ToAccountID   int32
 	Amount        decimal.Decimal
