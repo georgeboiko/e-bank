@@ -22,6 +22,13 @@ type GeoResolver interface {
 }
 
 func RunInboxConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, client *kgo.Client, resolver GeoResolver) error {
+	if err := recoverUncheckedTransfers(ctx, pool); err != nil {
+		if ctx.Err() != nil {
+			return nil
+		}
+		return fmt.Errorf("recover unfinished Antifraud checks: %w", err)
+	}
+
 	for ctx.Err() == nil {
 		fetches := client.PollRecords(ctx, 1)
 		records := fetches.RecordIter()
@@ -84,7 +91,7 @@ func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, resolver GeoReso
 	if event.Data.IPAddress != nil {
 		geo = resolver.Resolve(ctx, *event.Data.IPAddress)
 	}
-	return repositories.StoreTransferAttempt(ctx, pool, event, record.Value, geo)
+	return repositories.StoreTransferAttempt(ctx, pool, event, record.Value, geo, evaluateTransferCheck)
 }
 
 func validateFraudRequest(event kafka.FraudCheckRequested) error {
