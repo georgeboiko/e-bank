@@ -42,7 +42,9 @@ func run(logger *slog.Logger) error {
 
 	accountRepository := repositories.NewAccountRepository(pool)
 	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
-	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService))
+	transferRepository := repositories.NewTransferRepository(pool)
+	transferService := services.NewTransferService(transferRepository)
+	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService, transferService))
 }
 
 func main() {
