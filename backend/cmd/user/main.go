@@ -7,7 +7,6 @@ import (
 	"e-bank/backend/internal/infrastructure/auth"
 	"e-bank/backend/internal/infrastructure/config"
 	"e-bank/backend/internal/infrastructure/db/postgres"
-	"e-bank/backend/internal/infrastructure/httpserver"
 	"e-bank/backend/internal/infrastructure/util"
 	"e-bank/backend/internal/user/httpapi"
 )
@@ -38,7 +37,7 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
-	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, authenticate))
+	return runWithLoginIngestion(ctx, logger, pool, addr, httpapi.NewRouter(pool, authenticate))
 }
 
 func main() {
