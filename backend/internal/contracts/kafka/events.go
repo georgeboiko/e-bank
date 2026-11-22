@@ -17,6 +17,8 @@ const (
 	EventFraudDecision       EventType = "FraudDecision"
 )
 
+const TopicFraudCheckRequested = "money.fraud-check.requested"
+
 type Decision string
 
 const (

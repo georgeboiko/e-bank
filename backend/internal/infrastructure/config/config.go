@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
+	"unicode"
 )
 
 const MoneyMaxAccountsPerClient = 10
@@ -37,4 +39,14 @@ func GetAddr(service string, port int) string {
 		addr = "localhost:" + strconv.Itoa(port)
 	}
 	return addr
+}
+
+func GetKafkaBrokers() []string {
+	brokers := strings.FieldsFunc(os.Getenv("KAFKA_BROKERS"), func(r rune) bool {
+		return r == ',' || unicode.IsSpace(r)
+	})
+	if len(brokers) == 0 {
+		return []string{"localhost:9092"}
+	}
+	return brokers
 }

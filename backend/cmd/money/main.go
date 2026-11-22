@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"e-bank/backend/internal/infrastructure/auth"
 	"e-bank/backend/internal/infrastructure/config"
@@ -12,6 +15,8 @@ import (
 	"e-bank/backend/internal/money/httpapi"
 	"e-bank/backend/internal/money/repositories"
 	"e-bank/backend/internal/money/services"
+
+	"github.com/twmb/franz-go/pkg/kgo"
 )
 
 const (
@@ -39,6 +44,27 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pool.Close()
+
+	producer, err := kgo.NewClient(
+		kgo.SeedBrokers(config.GetKafkaBrokers()...),
+		kgo.AllowAutoTopicCreation(),
+		kgo.RequiredAcks(kgo.AllISRAcks()),
+		kgo.RecordDeliveryTimeout(5*time.Second),
+	)
+	if err != nil {
+		return fmt.Errorf("configure Money Kafka producer: %w", err)
+	}
+	publisherCtx, cancelPublisher := context.WithCancel(ctx)
+	publisherDone := make(chan struct{})
+	go func() {
+		defer close(publisherDone)
+		services.RunFraudRequestPublisher(publisherCtx, logger, pool, producer)
+	}()
+	defer func() {
+		cancelPublisher()
+		producer.Close()
+		<-publisherDone
+	}()
 
 	accountRepository := repositories.NewAccountRepository(pool)
 	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
