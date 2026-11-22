@@ -18,6 +18,7 @@ const (
 )
 
 const TopicFraudCheckRequested = "money.fraud-check.requested"
+const TopicLoginSucceeded = "user.security-events"
 
 type Decision string
 

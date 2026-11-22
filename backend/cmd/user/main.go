@@ -37,6 +37,11 @@ func run(logger *slog.Logger) error {
 		return err
 	}
 	defer pool.Close()
+	stopPublisher, err := startLoginPublisher(ctx, logger, pool)
+	if err != nil {
+		return err
+	}
+	defer stopPublisher()
 
 	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, authenticate))
 }
