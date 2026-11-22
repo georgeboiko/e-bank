@@ -23,6 +23,7 @@ import (
 
 const (
 	loginPollInterval = 5 * time.Second
+	loginPollDelay    = 2 * time.Second
 	loginPollOverlap  = time.Minute
 	loginPageSize     = 100
 )
@@ -105,17 +106,14 @@ func (s *KeycloakLoginSource) accessToken(ctx context.Context) (string, error) {
 	return token.AccessToken, nil
 }
 
-func (s *KeycloakLoginSource) loginPage(ctx context.Context, token string, since, until time.Time, offset int) ([]keycloakLogin, error) {
+func (s *KeycloakLoginSource) loginPage(ctx context.Context, token string, from, to int64, limit int) ([]keycloakLogin, error) {
 	query := url.Values{
 		"type":      {"LOGIN"},
 		"client":    {s.loginClient},
 		"direction": {"asc"},
-		"dateTo":    {strconv.FormatInt(until.UnixMilli(), 10)},
-		"first":     {strconv.Itoa(offset)},
-		"max":       {strconv.Itoa(loginPageSize)},
-	}
-	if !since.IsZero() {
-		query.Set("dateFrom", strconv.FormatInt(since.UnixMilli(), 10))
+		"dateFrom":  {strconv.FormatInt(from, 10)},
+		"dateTo":    {strconv.FormatInt(to, 10)},
+		"max":       {strconv.Itoa(limit)},
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, s.eventsURL+"?"+query.Encode(), nil)
 	if err != nil {
@@ -154,7 +152,7 @@ func (s *KeycloakLoginSource) Run(ctx context.Context, logger *slog.Logger, pool
 			ready = err == nil
 		}
 		if err == nil {
-			until := time.Now()
+			until := time.Now().Add(-loginPollDelay)
 			if latest.After(until) {
 				latest = until
 			}
@@ -183,30 +181,52 @@ func (s *KeycloakLoginSource) recordLogins(ctx context.Context, logger *slog.Log
 	if err != nil {
 		return err
 	}
-	for offset := 0; ; offset += loginPageSize {
-		logins, err := s.loginPage(ctx, token, since, until, offset)
+	// Keycloak timestamps are positive epoch milliseconds and both bounds are inclusive.
+	return s.recordLoginWindow(ctx, logger, pool, token, max(1, since.UnixMilli()), until.UnixMilli())
+}
+
+func (s *KeycloakLoginSource) recordLoginWindow(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, token string, from, to int64) error {
+	limit := loginPageSize
+	for {
+		logins, err := s.loginPage(ctx, token, from, to, limit)
 		if err != nil {
 			return err
 		}
-		for _, login := range logins {
-			if login.Type != "LOGIN" || login.Error != "" || login.ClientID != s.loginClient {
-				continue
-			}
-			ip, err := netip.ParseAddr(login.IPAddress)
-			if login.ID == "" || login.Time <= 0 || strings.TrimSpace(login.UserID) == "" ||
-				strings.ContainsRune(login.UserID, 0) || err != nil || ip.Zone() != "" {
-				logger.Warn("Skipping malformed Keycloak login event", "event_id", login.ID)
-				continue
-			}
-			eventID := loginEventID(login.ID, login.Time)
-			if err := repositories.RecordLogin(ctx, pool, eventID, login.UserID, ip.Unmap(), time.UnixMilli(login.Time)); err != nil {
-				return fmt.Errorf("record Keycloak login %s: %w", login.ID, err)
-			}
+		if len(logins) < limit {
+			return s.storeLogins(ctx, logger, pool, logins)
 		}
-		if len(logins) < loginPageSize {
-			return nil
+		// Keycloak only sorts by time. Splitting full ranges avoids offset paging
+		// across events sharing a timestamp. Fetch a single timestamp as one group.
+		if from < to {
+			middle := from + (to-from)/2
+			if err := s.recordLoginWindow(ctx, logger, pool, token, from, middle); err != nil {
+				return err
+			}
+			return s.recordLoginWindow(ctx, logger, pool, token, middle+1, to)
+		}
+		// The response size limit in readJSON bounds this retry. Propagate the
+		// error instead of advancing the poll cursor past a partial timestamp.
+		limit *= 2
+	}
+}
+
+func (s *KeycloakLoginSource) storeLogins(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, logins []keycloakLogin) error {
+	for _, login := range logins {
+		if login.Type != "LOGIN" || login.Error != "" || login.ClientID != s.loginClient {
+			continue
+		}
+		ip, err := netip.ParseAddr(login.IPAddress)
+		if login.ID == "" || login.Time <= 0 || strings.TrimSpace(login.UserID) == "" ||
+			strings.ContainsRune(login.UserID, 0) || err != nil || ip.Zone() != "" {
+			logger.Warn("Skipping malformed Keycloak login event", "event_id", login.ID)
+			continue
+		}
+		eventID := loginEventID(login.ID, login.Time)
+		if err := repositories.RecordLogin(ctx, pool, eventID, login.UserID, ip.Unmap(), time.UnixMilli(login.Time)); err != nil {
+			return fmt.Errorf("record Keycloak login %s: %w", login.ID, err)
 		}
 	}
+	return nil
 }
 
 func loginEventID(sourceID string, occurredAtMillis int64) [16]byte {
