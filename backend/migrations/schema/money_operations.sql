@@ -407,7 +407,7 @@ DECLARE
 BEGIN
     SELECT * INTO current_transfer FROM transfer WHERE id = p_transfer_id FOR UPDATE;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Пополнение % не найдено', p_transfer_id;
+        RAISE EXCEPTION 'Пополнение % не найдено', p_transfer_id USING ERRCODE = 'P0002';
     END IF;
     SELECT * INTO payment FROM external_payment WHERE transfer_id = p_transfer_id;
     IF NOT FOUND OR payment.external_payment_id IS DISTINCT FROM p_external_payment_id
@@ -415,13 +415,13 @@ BEGIN
        OR current_transfer.amount IS DISTINCT FROM p_amount
        OR p_currency IS DISTINCT FROM 'RUB' THEN
         RAISE EXCEPTION 'Идентификатор, сумма или валюта платежа не соответствуют пополнению %',
-            p_transfer_id;
+            p_transfer_id USING ERRCODE = 'P3315';
     END IF;
     IF current_transfer.state IN ('COMPLETING', 'COMPLETED') THEN
         RETURN current_transfer.id;
     END IF;
     IF current_transfer.state <> 'PENDING' THEN
-        RAISE EXCEPTION 'Пополнение % не находится в PENDING', p_transfer_id;
+        RAISE EXCEPTION 'Пополнение % не находится в PENDING', p_transfer_id USING ERRCODE = 'P3316';
     END IF;
 
     PERFORM id FROM account
@@ -433,7 +433,7 @@ BEGIN
         RAISE EXCEPTION 'Перевод % не является пополнением', p_transfer_id;
     END IF;
     IF sender.state <> 'ACTIVE' OR recipient.state <> 'ACTIVE' THEN
-        RAISE EXCEPTION 'Оба счёта должны быть активны';
+        RAISE EXCEPTION 'Оба счёта должны быть активны' USING ERRCODE = 'P3312';
     END IF;
     operation_at := clock_timestamp();
 
@@ -452,19 +452,19 @@ DECLARE
 BEGIN
     SELECT * INTO current_transfer FROM transfer WHERE id = p_transfer_id FOR UPDATE;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Пополнение % не найдено', p_transfer_id;
+        RAISE EXCEPTION 'Пополнение % не найдено', p_transfer_id USING ERRCODE = 'P0002';
     END IF;
     IF NOT EXISTS (
         SELECT 1 FROM external_payment
         WHERE transfer_id = p_transfer_id AND external_payment_id = p_external_payment_id
     ) THEN
-        RAISE EXCEPTION 'Внешний платёж не соответствует пополнению %', p_transfer_id;
+        RAISE EXCEPTION 'Внешний платёж не соответствует пополнению %', p_transfer_id USING ERRCODE = 'P3315';
     END IF;
     IF current_transfer.state = 'CANCELLED' THEN
         RETURN;
     END IF;
     IF current_transfer.state <> 'PENDING' THEN
-        RAISE EXCEPTION 'Пополнение % не находится в PENDING', p_transfer_id;
+        RAISE EXCEPTION 'Пополнение % не находится в PENDING', p_transfer_id USING ERRCODE = 'P3316';
     END IF;
     operation_at := clock_timestamp();
     UPDATE transfer SET state = 'CANCELLED', updated_at = operation_at,

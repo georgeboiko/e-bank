@@ -154,7 +154,9 @@ PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_
 
 Повтор `POST /topups` с тем же `Idempotency-Key` подхватывает заявку. Если связь с внешним платежом ещё не записана, Money повторяет запрос с тем же ключом в пределах 24 часов от создания заявки. Старую заявку без сохранённого ID платежа требуется сверить вручную. [Формат API ЮKassa](https://yookassa.ru/developers/using-api/interaction-format)
 
-На существующей базе Money примени актуальный `migrations/schema/money_operations.sql` для кодов ошибок `create_topup`.
+После оплаты клиент вызывает `POST /topups/{topupId}/refresh`. Money проверяет платёж, а отдельный воркер зачисляет подтверждённую сумму. `GET /topups/{topupId}` возвращает текущее состояние.
+
+На существующей базе Money примени актуальный `migrations/schema/money_operations.sql` для кодов ошибок операций с пополнением.
 
 ### Подключение к Kafka
 

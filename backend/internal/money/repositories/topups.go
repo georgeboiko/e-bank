@@ -9,6 +9,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/shopspring/decimal"
 )
 
 type TopupRepository struct {
@@ -83,4 +84,33 @@ func readTopup(ctx context.Context, db topupReader, id int32, owner *string) (mo
 func (r *TopupRepository) RegisterPayment(ctx context.Context, topupID int32, paymentID string) error {
 	_, err := r.pool.Exec(ctx, `SELECT register_topup_payment($1, $2)`, topupID, paymentID)
 	return err
+}
+
+func (r *TopupRepository) ConfirmPayment(ctx context.Context, topupID int32, paymentID string, amount decimal.Decimal, currency string) error {
+	_, err := r.pool.Exec(ctx, `SELECT confirm_topup($1, $2, $3, $4)`, topupID, paymentID, amount, currency)
+	return topupUpdateError(err)
+}
+
+func (r *TopupRepository) CancelPayment(ctx context.Context, topupID int32, paymentID string) error {
+	_, err := r.pool.Exec(ctx, `SELECT cancel_topup($1, $2)`, topupID, paymentID)
+	return topupUpdateError(err)
+}
+
+func topupUpdateError(err error) error {
+	var pgErr *pgconn.PgError
+	if !errors.As(err, &pgErr) {
+		return err
+	}
+	switch pgErr.Code {
+	case "P0002":
+		return models.ErrTopupNotFound
+	case "P3312":
+		return models.ErrInactiveAccount
+	case "P3315":
+		return models.ErrTopupPaymentMismatch
+	case "P3316":
+		return models.ErrTopupInvalidState
+	default:
+		return err
+	}
 }

@@ -68,6 +68,58 @@ func (s *TopupService) Create(ctx context.Context, input models.CreateTopup) (mo
 	return topup, created, nil
 }
 
+func (s *TopupService) Get(ctx context.Context, actorID string, admin bool, id int32) (models.Topup, error) {
+	var owner *string
+	if !admin {
+		owner = &actorID
+	}
+	topup, err := s.repository.Get(ctx, id, owner)
+	if err != nil || s.provider == nil || topup.State != "PENDING" || topup.PaymentID == nil {
+		return topup, err
+	}
+	payment, err := s.provider.GetPayment(ctx, *topup.PaymentID)
+	if err == nil && matchTopupPayment(topup, payment) == nil {
+		topup.ConfirmationURL = payment.ConfirmationURL
+	}
+	return topup, nil
+}
+
+func (s *TopupService) Refresh(ctx context.Context, ownerID string, id int32) (models.Topup, error) {
+	topup, err := s.repository.Get(ctx, id, &ownerID)
+	if err != nil || topup.State != "PENDING" {
+		return topup, err
+	}
+	if topup.PaymentID == nil {
+		return models.Topup{}, models.ErrTopupNoPayment
+	}
+	if s.provider == nil {
+		return models.Topup{}, models.ErrTopupsUnavailable
+	}
+	payment, err := s.provider.GetPayment(ctx, *topup.PaymentID)
+	if err != nil {
+		return models.Topup{}, fmt.Errorf("check topup payment: %w", err)
+	}
+	if err := matchTopupPayment(topup, payment); err != nil {
+		return models.Topup{}, err
+	}
+
+	switch payment.Status {
+	case "succeeded":
+		err = s.repository.ConfirmPayment(ctx, topup.ID, payment.ID, payment.Amount, payment.Currency)
+	case "canceled":
+		err = s.repository.CancelPayment(ctx, topup.ID, payment.ID)
+	}
+	if err != nil {
+		return models.Topup{}, fmt.Errorf("apply topup payment status: %w", err)
+	}
+
+	topup, err = s.repository.Get(ctx, id, &ownerID)
+	if err == nil && topup.State == "PENDING" {
+		topup.ConfirmationURL = payment.ConfirmationURL
+	}
+	return topup, err
+}
+
 func matchTopupPayment(topup models.Topup, payment yookassa.Payment) error {
 	if (topup.PaymentID != nil && payment.ID != *topup.PaymentID) ||
 		payment.Currency != "RUB" || !payment.Amount.Equal(topup.Amount) {
