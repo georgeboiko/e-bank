@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"time"
 
 	"e-bank/backend/internal/antifraud/geoip"
 	"e-bank/backend/internal/antifraud/httpapi"
@@ -66,6 +67,27 @@ func run(logger *slog.Logger) error {
 
 	runCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
+
+	producer, err := kgo.NewClient(
+		kgo.SeedBrokers(config.GetKafkaBrokers()...),
+		kgo.AllowAutoTopicCreation(),
+		kgo.RequiredAcks(kgo.AllISRAcks()),
+		kgo.RecordDeliveryTimeout(5*time.Second),
+	)
+	if err != nil {
+		return fmt.Errorf("configure Antifraud Kafka producer: %w", err)
+	}
+
+	publisherDone := make(chan struct{})
+	go func() {
+		defer close(publisherDone)
+		services.RunFraudDecisionPublisher(runCtx, logger, pool, producer)
+	}()
+	defer func() {
+		cancel()
+		producer.Close()
+		<-publisherDone
+	}()
 
 	consumerDone := make(chan error, 1)
 	go func() {
