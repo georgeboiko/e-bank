@@ -304,11 +304,29 @@ DECLARE
 BEGIN
     IF p_amount IS NULL OR p_amount <= 0 OR p_amount = 'NaN'::numeric
        OR p_amount <> round(p_amount, 2) THEN
-        RAISE EXCEPTION 'Сумма должна быть положительной и содержать не более двух дробных знаков';
+        RAISE EXCEPTION 'Сумма должна быть положительной и содержать не более двух дробных знаков' USING ERRCODE = '22023';
     END IF;
     PERFORM id FROM account
     WHERE id IN (p_technical_account_id, p_to_account_id)
     ORDER BY id FOR UPDATE;
+    SELECT * INTO existing_transfer FROM transfer WHERE idempotency_key = p_idempotency_key;
+    IF FOUND THEN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM account original_sender
+            JOIN account original_recipient ON original_recipient.id = existing_transfer.to_account_id
+            WHERE original_sender.id = existing_transfer.from_account_id
+              AND coalesce(original_sender.owner_id, original_recipient.owner_id) = p_actor_id
+        ) THEN
+            RAISE EXCEPTION 'Заявка с этим ключом недоступна' USING ERRCODE = 'P0002';
+        END IF;
+        IF ROW(existing_transfer.from_account_id, existing_transfer.to_account_id, existing_transfer.amount)
+           IS DISTINCT FROM ROW(p_technical_account_id, p_to_account_id, p_amount) THEN
+            RAISE EXCEPTION 'Ключ идемпотентности уже использован для другого запроса' USING ERRCODE = 'P3311';
+        END IF;
+        RETURN existing_transfer.id;
+    END IF;
+
     SELECT * INTO sender FROM account WHERE id = p_technical_account_id;
     IF NOT FOUND OR sender.type <> 'TECHNICAL' THEN
         RAISE EXCEPTION 'Технический счёт не найден';
@@ -316,20 +334,11 @@ BEGIN
     SELECT * INTO recipient FROM account WHERE id = p_to_account_id;
     IF NOT FOUND OR recipient.type <> 'CLIENT'
        OR recipient.owner_id IS DISTINCT FROM p_actor_id THEN
-        RAISE EXCEPTION 'Клиентский счёт получателя не найден или принадлежит другому пользователю';
-    END IF;
-
-    SELECT * INTO existing_transfer FROM transfer WHERE idempotency_key = p_idempotency_key;
-    IF FOUND THEN
-        IF ROW(existing_transfer.from_account_id, existing_transfer.to_account_id, existing_transfer.amount)
-           IS DISTINCT FROM ROW(p_technical_account_id, p_to_account_id, p_amount) THEN
-            RAISE EXCEPTION 'Ключ идемпотентности уже использован для другого запроса';
-        END IF;
-        RETURN existing_transfer.id;
+        RAISE EXCEPTION 'Клиентский счёт получателя не найден или принадлежит другому пользователю' USING ERRCODE = 'P0002';
     END IF;
 
     IF sender.state <> 'ACTIVE' OR recipient.state <> 'ACTIVE' THEN
-        RAISE EXCEPTION 'Оба счёта должны быть активны';
+        RAISE EXCEPTION 'Оба счёта должны быть активны' USING ERRCODE = 'P3312';
     END IF;
     operation_at := clock_timestamp();
 

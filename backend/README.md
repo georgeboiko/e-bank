@@ -148,6 +148,14 @@ PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_
 
 Сервис использует параметры из Go по умолчанию. Изменения администратора через `PUT /rules/{ruleId}` сохраняются в БД Antifraud и применяются к новым проверкам.
 
+### Тестовые пополнения через ЮKassa
+
+Для Money укажи в `.env.test` ID и секрет тестового магазина (`YOOKASSA_SHOP_ID` и `YOOKASSA_SECRET_KEY`), `YOOKASSA_RETURN_URL` и `MONEY_TOPUP_TECHNICAL_ACCOUNT_ID`. В демонстрационных данных технический счёт имеет ID `1`. Без настроек ЮKassa остальной API Money доступен.
+
+Повтор `POST /topups` с тем же `Idempotency-Key` подхватывает заявку. Если связь с внешним платежом ещё не записана, Money повторяет запрос с тем же ключом в пределах 24 часов от создания заявки. Старую заявку без сохранённого ID платежа требуется сверить вручную. [Формат API ЮKassa](https://yookassa.ru/developers/using-api/interaction-format)
+
+На существующей базе Money примени актуальный `migrations/schema/money_operations.sql` для кодов ошибок `create_topup`.
+
 ### Подключение к Kafka
 
 С хоста используй `KAFKA_BROKERS=localhost:9092`, из контейнера в той же сети Compose — `KAFKA_BROKERS=kafka:29092`.
