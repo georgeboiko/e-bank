@@ -14,6 +14,7 @@ func NewRouter(pool *pgxpool.Pool, authenticate func(http.Handler) http.Handler)
 	registerReviewQueueRoutes(router, pool)
 	registerReviewGraphRoutes(router, pool)
 	registerReviewDecisionRoutes(router, pool)
+	registerRuleSettingsRoutes(router, pool)
 
 	return httpserver.WithHealth(pool, authenticate(router))
 }
