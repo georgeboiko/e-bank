@@ -11,6 +11,7 @@ import (
 
 func NewRouter(pool *pgxpool.Pool, authenticate func(http.Handler) http.Handler) http.Handler {
 	router := chi.NewRouter()
+	registerReviewQueueRoutes(router, pool)
 
 	return httpserver.WithHealth(pool, authenticate(router))
 }
