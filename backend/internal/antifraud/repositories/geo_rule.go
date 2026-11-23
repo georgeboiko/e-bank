@@ -9,9 +9,10 @@ import (
 	"e-bank/backend/internal/contracts/kafka"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/shopspring/decimal"
 )
 
-func EvaluateGeoRule(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckRequestedData) (models.RuleEvaluation, error) {
+func EvaluateGeoRule(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckRequestedData, config models.RuleConfig) (models.RuleEvaluation, error) {
 	var transferLatitude, transferLongitude, loginLatitude, loginLongitude *float64
 	err := tx.QueryRow(ctx, `
 		SELECT a.latitude::double precision, a.longitude::double precision,
@@ -22,12 +23,12 @@ func EvaluateGeoRule(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckReques
 		    FROM login_event
 		    WHERE user_id = $2
 		      AND occurred_at < a.created_at
-		      AND occurred_at >= a.created_at - interval '2 hours'
+		      AND occurred_at >= a.created_at - $3::bigint * interval '1 second'
 		    ORDER BY occurred_at DESC, id DESC
 		    LIMIT 1
 		) l ON true
 		WHERE a.id = $1
-	`, data.TransferID, data.SenderID).Scan(
+	`, data.TransferID, data.SenderID, config.Integer("windowSeconds")).Scan(
 		&transferLatitude, &transferLongitude, &loginLatitude, &loginLongitude,
 	)
 	if err != nil {
@@ -40,15 +41,15 @@ func EvaluateGeoRule(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckReques
 		return result, nil
 	}
 	if loginLatitude == nil || loginLongitude == nil {
-		result.Reason = "Нет геолокации последнего входа за два часа"
+		result.Reason = "Нет геолокации последнего входа в заданном окне"
 		return result, nil
 	}
 
 	distance := distanceKM(*transferLatitude, *transferLongitude, *loginLatitude, *loginLongitude)
 	result.Status = models.RuleNotTriggered
-	if distance >= 500 {
+	if decimal.NewFromFloat(distance).GreaterThanOrEqual(config.Parameters["minDistanceKm"]) {
 		result.Status = models.RuleTriggered
-		result.Score = 15
+		result.Score = config.Points["triggered"]
 	}
 	result.Reason = fmt.Sprintf("От последнего входа до перевода %.1f км", distance)
 	return result, nil

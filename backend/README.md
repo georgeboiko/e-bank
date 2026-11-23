@@ -137,6 +137,17 @@ Realm `ebank` импортируется при первом запуске. Т�
    ./migrations/scripts/seed.sh
    ```
 
+### Обновление настроек правил Antifraud
+
+При первоначальном запуске таблицу настроек создаёт `create.sh`. Для существующей базы Antifraud выполни из каталога `backend`:
+
+```sh
+. ./.env.test
+PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_DB_USER" -d "$ANTIFRAUD_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/schema/antifraud_rule_settings.sql
+```
+
+Сервис использует параметры из Go по умолчанию. Изменения администратора через `PUT /rules/{ruleId}` сохраняются в БД Antifraud и применяются к новым проверкам.
+
 ### Подключение к Kafka
 
 С хоста используй `KAFKA_BROKERS=localhost:9092`, из контейнера в той же сети Compose — `KAFKA_BROKERS=kafka:29092`.
