@@ -27,6 +27,8 @@ func NewRouter(
 	read := router.With(auth.RequireRole("CLIENT", "ADMIN"))
 	read.Get("/accounts", listAccountsHandler(accountService))
 	read.Get("/accounts/{accountId}", getAccountHandler(accountService))
+	read.Get("/accounts/{accountId}/ledger", listLedgerHandler(accountService))
+	read.Get("/transfers", listTransfersHandler(transferService))
 	read.Get("/transfers/{transferId}", getTransferHandler(transferService))
 	read.Get("/topups/{topupId}", getTopupHandler(topupService))
 

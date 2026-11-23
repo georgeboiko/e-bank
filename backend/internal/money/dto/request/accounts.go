@@ -17,13 +17,11 @@ type AccountList struct {
 }
 
 func ParseAccountList(query url.Values) (AccountList, error) {
-	for _, name := range []string{"ownerId", "state", "limit", "offset"} {
-		if len(query[name]) > 1 {
-			return AccountList{}, fmt.Errorf("параметр %s указывается один раз", name)
-		}
+	if err := validateSingleParams(query, "ownerId", "state", "limit", "offset"); err != nil {
+		return AccountList{}, err
 	}
 
-	params := AccountList{Limit: 50}
+	var params AccountList
 	if query.Has("ownerId") {
 		ownerID := query.Get("ownerId")
 		if ownerID == "" || !utf8.ValidString(ownerID) || strings.ContainsRune(ownerID, '\x00') {
@@ -39,19 +37,38 @@ func ParseAccountList(query url.Values) (AccountList, error) {
 			return AccountList{}, errors.New("state должен быть ACTIVE, BLOCKED или CLOSED")
 		}
 	}
-	if query.Has("limit") {
-		limit, err := strconv.Atoi(query.Get("limit"))
-		if err != nil || limit < 1 || limit > 100 {
-			return AccountList{}, errors.New("limit должен быть целым числом от 1 до 100")
-		}
-		params.Limit = limit
-	}
-	if query.Has("offset") {
-		offset, err := strconv.ParseInt(query.Get("offset"), 10, 64)
-		if err != nil || offset < 0 {
-			return AccountList{}, errors.New("offset должен быть неотрицательным целым числом")
-		}
-		params.Offset = offset
+	var err error
+	params.Limit, params.Offset, err = parsePagination(query)
+	if err != nil {
+		return AccountList{}, err
 	}
 	return params, nil
+}
+
+func validateSingleParams(query url.Values, names ...string) error {
+	for _, name := range names {
+		if len(query[name]) > 1 {
+			return fmt.Errorf("параметр %s указывается один раз", name)
+		}
+	}
+	return nil
+}
+
+func parsePagination(query url.Values) (int, int64, error) {
+	limit := 50
+	var offset int64
+	var err error
+	if query.Has("limit") {
+		limit, err = strconv.Atoi(query.Get("limit"))
+		if err != nil || limit < 1 || limit > 100 {
+			return 0, 0, errors.New("limit должен быть целым числом от 1 до 100")
+		}
+	}
+	if query.Has("offset") {
+		offset, err = strconv.ParseInt(query.Get("offset"), 10, 64)
+		if err != nil || offset < 0 {
+			return 0, 0, errors.New("offset должен быть неотрицательным целым числом")
+		}
+	}
+	return limit, offset, nil
 }
