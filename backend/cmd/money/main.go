@@ -88,6 +88,16 @@ func run(logger *slog.Logger) error {
 		cancel()
 	}()
 
+	finalizerDone := make(chan struct{})
+	go func() {
+		defer close(finalizerDone)
+		services.RunTransferFinalizer(runCtx, logger, pool)
+	}()
+	defer func() {
+		cancel()
+		<-finalizerDone
+	}()
+
 	accountRepository := repositories.NewAccountRepository(pool)
 	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
 	transferRepository := repositories.NewTransferRepository(pool)
