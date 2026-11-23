@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"e-bank/backend/internal/contracts/kafka"
 
@@ -12,29 +13,9 @@ import (
 
 func StoreTransferAttempt(ctx context.Context, pool *pgxpool.Pool, event kafka.FraudCheckRequested, payload []byte) error {
 	return pgx.BeginTxFunc(ctx, pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
-		inbox, err := tx.Exec(ctx, `
-			INSERT INTO inbox_event (event_id, occurred_at, payload)
-			VALUES ($1::text::uuid, $2, $3::jsonb)
-			ON CONFLICT (event_id) DO NOTHING
-		`, event.EventID, event.OccurredAt, payload)
-		if err != nil {
-			return fmt.Errorf("insert transfer request into inbox: %w", err)
-		}
-		if inbox.RowsAffected() == 0 {
-			var matches, applied bool
-			err := tx.QueryRow(ctx, `
-				SELECT payload = $2::jsonb, applied
-				FROM inbox_event WHERE event_id = $1::text::uuid FOR UPDATE
-			`, event.EventID, payload).Scan(&matches, &applied)
-			if err != nil {
-				return fmt.Errorf("read existing inbox event: %w", err)
-			}
-			if !matches {
-				return fmt.Errorf("inbox event %s was already received with a different payload", event.EventID)
-			}
-			if applied {
-				return nil
-			}
+		apply, err := beginInboxEvent(ctx, tx, event.EventID, event.OccurredAt, payload)
+		if err != nil || !apply {
+			return err
 		}
 
 		data := event.Data
@@ -55,6 +36,33 @@ func StoreTransferAttempt(ctx context.Context, pool *pgxpool.Pool, event kafka.F
 		}
 		return nil
 	})
+}
+
+func beginInboxEvent(ctx context.Context, tx pgx.Tx, eventID string, occurredAt time.Time, payload []byte) (bool, error) {
+	inbox, err := tx.Exec(ctx, `
+		INSERT INTO inbox_event (event_id, occurred_at, payload)
+		VALUES ($1::text::uuid, $2, $3::jsonb)
+		ON CONFLICT (event_id) DO NOTHING
+	`, eventID, occurredAt, payload)
+	if err != nil {
+		return false, fmt.Errorf("insert inbox event: %w", err)
+	}
+	if inbox.RowsAffected() != 0 {
+		return true, nil
+	}
+
+	var matches, applied bool
+	err = tx.QueryRow(ctx, `
+		SELECT payload = $2::jsonb, applied
+		FROM inbox_event WHERE event_id = $1::text::uuid FOR UPDATE
+	`, eventID, payload).Scan(&matches, &applied)
+	if err != nil {
+		return false, fmt.Errorf("read existing inbox event: %w", err)
+	}
+	if !matches {
+		return false, fmt.Errorf("inbox event %s was already received with a different payload", eventID)
+	}
+	return !applied, nil
 }
 
 func storeAccountOwners(ctx context.Context, tx pgx.Tx, data kafka.FraudCheckRequestedData) error {

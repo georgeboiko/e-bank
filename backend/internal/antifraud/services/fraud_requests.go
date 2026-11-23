@@ -15,7 +15,7 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
-func RunFraudRequestConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, client *kgo.Client) error {
+func RunInboxConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, client *kgo.Client) error {
 	for ctx.Err() == nil {
 		fetches := client.PollRecords(ctx, 1)
 		records := fetches.RecordIter()
@@ -32,7 +32,7 @@ func RunFraudRequestConsumer(ctx context.Context, logger *slog.Logger, pool *pgx
 		}
 
 		record := records.Next()
-		err := applyFraudRequest(ctx, pool, client, record)
+		err := applyInboxRecord(ctx, pool, client, record)
 		client.AllowRebalance()
 		if ctx.Err() != nil {
 			return nil
@@ -44,10 +44,29 @@ func RunFraudRequestConsumer(ctx context.Context, logger *slog.Logger, pool *pgx
 	return nil
 }
 
-func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, client *kgo.Client, record *kgo.Record) error {
+func applyInboxRecord(ctx context.Context, pool *pgxpool.Pool, client *kgo.Client, record *kgo.Record) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
+	var err error
+	switch record.Topic {
+	case kafka.TopicFraudCheckRequested:
+		err = applyFraudRequest(ctx, pool, record)
+	case kafka.TopicLoginSucceeded:
+		err = applyLoginSucceeded(ctx, pool, record)
+	default:
+		return fmt.Errorf("unexpected inbox topic %q", record.Topic)
+	}
+	if err != nil {
+		return err
+	}
+	if err := client.CommitRecords(ctx, record); err != nil {
+		return fmt.Errorf("commit Kafka offset: %w", err)
+	}
+	return nil
+}
+
+func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, record *kgo.Record) error {
 	event, err := kafka.Decode[kafka.FraudCheckRequestedData](record.Value, kafka.EventFraudCheckRequested)
 	if err != nil {
 		return err
@@ -55,13 +74,7 @@ func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, client *kgo.Clie
 	if err := validateFraudRequest(event); err != nil {
 		return err
 	}
-	if err := repositories.StoreTransferAttempt(ctx, pool, event, record.Value); err != nil {
-		return err
-	}
-	if err := client.CommitRecords(ctx, record); err != nil {
-		return fmt.Errorf("commit Kafka offset: %w", err)
-	}
-	return nil
+	return repositories.StoreTransferAttempt(ctx, pool, event, record.Value)
 }
 
 func validateFraudRequest(event kafka.FraudCheckRequested) error {

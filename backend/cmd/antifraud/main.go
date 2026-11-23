@@ -47,7 +47,7 @@ func run(logger *slog.Logger) error {
 
 	consumer, err := kgo.NewClient(
 		kgo.SeedBrokers(config.GetKafkaBrokers()...),
-		kgo.ConsumeTopics(kafka.TopicFraudCheckRequested),
+		kgo.ConsumeTopics(kafka.TopicFraudCheckRequested, kafka.TopicLoginSucceeded),
 		kgo.ConsumerGroup("ebank-antifraud-fraud-requests"),
 		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
 		kgo.DisableAutoCommit(),
@@ -63,7 +63,7 @@ func run(logger *slog.Logger) error {
 
 	consumerDone := make(chan error, 1)
 	go func() {
-		consumerDone <- services.RunFraudRequestConsumer(runCtx, logger, pool, consumer)
+		consumerDone <- services.RunInboxConsumer(runCtx, logger, pool, consumer)
 		cancel()
 	}()
 
