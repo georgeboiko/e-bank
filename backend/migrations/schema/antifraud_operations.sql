@@ -113,17 +113,17 @@ BEGIN
     END IF;
     SELECT * INTO current_case FROM review_case WHERE id = p_case_id FOR UPDATE;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Ручной разбор % не найден', p_case_id;
+        RAISE EXCEPTION 'Ручной разбор % не найден', p_case_id USING ERRCODE = 'P0002';
     END IF;
     IF current_case.status = 'CLOSED' THEN
         IF ROW(current_case.analyst_id, current_case.decision, current_case.comment)
            IS DISTINCT FROM ROW(p_analyst_id, p_decision, p_comment) THEN
-            RAISE EXCEPTION 'Разбор % уже закрыт с другими данными', p_case_id;
+            RAISE EXCEPTION 'Разбор % уже закрыт с другими данными', p_case_id USING ERRCODE = 'P3322';
         END IF;
         RETURN;
     END IF;
     IF current_case.analyst_id IS NOT NULL AND current_case.analyst_id <> p_analyst_id THEN
-        RAISE EXCEPTION 'Разбор % назначен другому аналитику', p_case_id;
+        RAISE EXCEPTION 'Разбор % назначен другому аналитику', p_case_id USING ERRCODE = 'P3321';
     END IF;
     IF uuid_extract_version(p_event_id) IS DISTINCT FROM 7 THEN
         RAISE EXCEPTION 'Идентификатор события должен быть UUIDv7';
