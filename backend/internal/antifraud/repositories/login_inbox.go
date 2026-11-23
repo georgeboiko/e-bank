@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"e-bank/backend/internal/antifraud/models"
 	"e-bank/backend/internal/contracts/kafka"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func StoreLogin(ctx context.Context, pool *pgxpool.Pool, event kafka.LoginSucceeded, payload []byte) error {
+func StoreLogin(ctx context.Context, pool *pgxpool.Pool, event kafka.LoginSucceeded, payload []byte, geo models.Geo) error {
 	return pgx.BeginTxFunc(ctx, pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
 		apply, err := beginInboxEvent(ctx, tx, event.EventID, event.OccurredAt, payload)
 		if err != nil || !apply {
@@ -23,9 +24,12 @@ func StoreLogin(ctx context.Context, pool *pgxpool.Pool, event kafka.LoginSuccee
 			return fmt.Errorf("store login user: %w", err)
 		}
 		if _, err := tx.Exec(ctx, `
-			INSERT INTO login_event (user_id, ip_address, occurred_at)
-			VALUES ($1, $2, $3)
-		`, event.Data.UserID, event.Data.IPAddress, event.OccurredAt); err != nil {
+			INSERT INTO login_event (
+				user_id, ip_address, occurred_at, latitude, longitude, geo_status, geo_resolved_at
+			)
+			VALUES ($1, $2, $3, $4::double precision, $5::double precision, $6, $7)
+		`, event.Data.UserID, event.Data.IPAddress, event.OccurredAt,
+			geo.Latitude, geo.Longitude, geo.Status, geo.ResolvedAt); err != nil {
 			return fmt.Errorf("store login event: %w", err)
 		}
 		if _, err := tx.Exec(ctx, `

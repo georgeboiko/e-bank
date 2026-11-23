@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"os"
 
+	"e-bank/backend/internal/antifraud/geoip"
 	"e-bank/backend/internal/antifraud/httpapi"
 	"e-bank/backend/internal/antifraud/services"
 	"e-bank/backend/internal/contracts/kafka"
@@ -45,6 +46,11 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
+	resolver, err := geoip.New(os.Getenv("ANTIFRAUD_GEOIP_URL"))
+	if err != nil {
+		return err
+	}
+
 	consumer, err := kgo.NewClient(
 		kgo.SeedBrokers(config.GetKafkaBrokers()...),
 		kgo.ConsumeTopics(kafka.TopicFraudCheckRequested, kafka.TopicLoginSucceeded),
@@ -63,7 +69,7 @@ func run(logger *slog.Logger) error {
 
 	consumerDone := make(chan error, 1)
 	go func() {
-		consumerDone <- services.RunInboxConsumer(runCtx, logger, pool, consumer)
+		consumerDone <- services.RunInboxConsumer(runCtx, logger, pool, consumer, resolver)
 		cancel()
 	}()
 

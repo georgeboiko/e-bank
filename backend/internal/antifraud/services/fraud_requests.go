@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/netip"
 	"strings"
 	"time"
 
+	"e-bank/backend/internal/antifraud/models"
 	"e-bank/backend/internal/antifraud/repositories"
 	"e-bank/backend/internal/contracts/kafka"
 
@@ -15,7 +17,11 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
-func RunInboxConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, client *kgo.Client) error {
+type GeoResolver interface {
+	Resolve(context.Context, netip.Addr) models.Geo
+}
+
+func RunInboxConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Pool, client *kgo.Client, resolver GeoResolver) error {
 	for ctx.Err() == nil {
 		fetches := client.PollRecords(ctx, 1)
 		records := fetches.RecordIter()
@@ -32,7 +38,7 @@ func RunInboxConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Po
 		}
 
 		record := records.Next()
-		err := applyInboxRecord(ctx, pool, client, record)
+		err := applyInboxRecord(ctx, pool, client, resolver, record)
 		client.AllowRebalance()
 		if ctx.Err() != nil {
 			return nil
@@ -44,16 +50,16 @@ func RunInboxConsumer(ctx context.Context, logger *slog.Logger, pool *pgxpool.Po
 	return nil
 }
 
-func applyInboxRecord(ctx context.Context, pool *pgxpool.Pool, client *kgo.Client, record *kgo.Record) error {
+func applyInboxRecord(ctx context.Context, pool *pgxpool.Pool, client *kgo.Client, resolver GeoResolver, record *kgo.Record) error {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	var err error
 	switch record.Topic {
 	case kafka.TopicFraudCheckRequested:
-		err = applyFraudRequest(ctx, pool, record)
+		err = applyFraudRequest(ctx, pool, resolver, record)
 	case kafka.TopicLoginSucceeded:
-		err = applyLoginSucceeded(ctx, pool, record)
+		err = applyLoginSucceeded(ctx, pool, resolver, record)
 	default:
 		return fmt.Errorf("unexpected inbox topic %q", record.Topic)
 	}
@@ -66,7 +72,7 @@ func applyInboxRecord(ctx context.Context, pool *pgxpool.Pool, client *kgo.Clien
 	return nil
 }
 
-func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, record *kgo.Record) error {
+func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, resolver GeoResolver, record *kgo.Record) error {
 	event, err := kafka.Decode[kafka.FraudCheckRequestedData](record.Value, kafka.EventFraudCheckRequested)
 	if err != nil {
 		return err
@@ -74,7 +80,11 @@ func applyFraudRequest(ctx context.Context, pool *pgxpool.Pool, record *kgo.Reco
 	if err := validateFraudRequest(event); err != nil {
 		return err
 	}
-	return repositories.StoreTransferAttempt(ctx, pool, event, record.Value)
+	geo := models.Geo{Status: models.GeoMissing}
+	if event.Data.IPAddress != nil {
+		geo = resolver.Resolve(ctx, *event.Data.IPAddress)
+	}
+	return repositories.StoreTransferAttempt(ctx, pool, event, record.Value, geo)
 }
 
 func validateFraudRequest(event kafka.FraudCheckRequested) error {
