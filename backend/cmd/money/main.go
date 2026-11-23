@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
 	"time"
 
+	"e-bank/backend/internal/contracts/kafka"
 	"e-bank/backend/internal/infrastructure/auth"
 	"e-bank/backend/internal/infrastructure/config"
 	"e-bank/backend/internal/infrastructure/db/postgres"
@@ -45,6 +47,19 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
+	consumer, err := kgo.NewClient(
+		kgo.SeedBrokers(config.GetKafkaBrokers()...),
+		kgo.ConsumeTopics(kafka.TopicFraudDecision),
+		kgo.ConsumerGroup("ebank-money-fraud-decisions"),
+		kgo.ConsumeResetOffset(kgo.NewOffset().AtStart()),
+		kgo.DisableAutoCommit(),
+		kgo.BlockRebalanceOnPoll(),
+	)
+	if err != nil {
+		return fmt.Errorf("configure Money Kafka consumer: %w", err)
+	}
+	defer consumer.CloseAllowingRebalance()
+
 	producer, err := kgo.NewClient(
 		kgo.SeedBrokers(config.GetKafkaBrokers()...),
 		kgo.AllowAutoTopicCreation(),
@@ -54,23 +69,32 @@ func run(logger *slog.Logger) error {
 	if err != nil {
 		return fmt.Errorf("configure Money Kafka producer: %w", err)
 	}
-	publisherCtx, cancelPublisher := context.WithCancel(ctx)
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	publisherDone := make(chan struct{})
 	go func() {
 		defer close(publisherDone)
-		services.RunFraudRequestPublisher(publisherCtx, logger, pool, producer)
+		services.RunFraudRequestPublisher(runCtx, logger, pool, producer)
 	}()
 	defer func() {
-		cancelPublisher()
+		cancel()
 		producer.Close()
 		<-publisherDone
+	}()
+
+	consumerDone := make(chan error, 1)
+	go func() {
+		consumerDone <- services.RunFraudDecisionConsumer(runCtx, logger, pool, consumer)
+		cancel()
 	}()
 
 	accountRepository := repositories.NewAccountRepository(pool)
 	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
 	transferRepository := repositories.NewTransferRepository(pool)
 	transferService := services.NewTransferService(transferRepository)
-	return httpserver.Run(ctx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService, transferService))
+	serverErr := httpserver.Run(runCtx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService, transferService))
+	cancel()
+	return errors.Join(serverErr, <-consumerDone)
 }
 
 func main() {
