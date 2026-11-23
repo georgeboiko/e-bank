@@ -12,26 +12,50 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func StoreTransferAttempt(ctx context.Context, pool *pgxpool.Pool, event kafka.FraudCheckRequested, payload []byte, geo models.Geo) error {
+func StoreTransferAttempt(
+	ctx context.Context, pool *pgxpool.Pool, event kafka.FraudCheckRequested, payload []byte, geo models.Geo,
+	evaluate func(context.Context, pgx.Tx, kafka.FraudCheckRequestedData) error,
+) error {
 	return pgx.BeginTxFunc(ctx, pool, pgx.TxOptions{IsoLevel: pgx.ReadCommitted}, func(tx pgx.Tx) error {
 		apply, err := beginInboxEvent(ctx, tx, event.EventID, event.OccurredAt, payload)
-		if err != nil || !apply {
+		if err != nil {
 			return err
 		}
 
 		data := event.Data
-		if err := storeAccountOwners(ctx, tx, data); err != nil {
-			return err
+		if apply {
+			if err := storeAccountOwners(ctx, tx, data); err != nil {
+				return err
+			}
+			if err := storeAttempt(ctx, tx, data, geo); err != nil {
+				return err
+			}
 		}
-		if err := storeAttempt(ctx, tx, data, geo); err != nil {
-			return err
+
+		var transferID int32
+		err = tx.QueryRow(ctx, `SELECT id FROM transfer_attempt WHERE id = $1 FOR UPDATE`, data.TransferID).Scan(&transferID)
+		if err != nil {
+			return fmt.Errorf("lock transfer attempt for check: %w", err)
+		}
+		var checked bool
+		err = tx.QueryRow(ctx, `SELECT EXISTS (SELECT 1 FROM antifraud_check WHERE transfer_id = $1)`, transferID).Scan(&checked)
+		if err != nil {
+			return fmt.Errorf("look up existing Antifraud check: %w", err)
+		}
+		if !checked {
+			if err := evaluate(ctx, tx, data); err != nil {
+				return fmt.Errorf("evaluate transfer %d: %w", transferID, err)
+			}
+		}
+		if !apply {
+			return nil
 		}
 
 		_, err = tx.Exec(ctx, `
 			UPDATE inbox_event
 			SET transfer_id = $2, applied = true, processed_at = clock_timestamp()
 			WHERE event_id = $1::text::uuid
-		`, event.EventID, data.TransferID)
+		`, event.EventID, transferID)
 		if err != nil {
 			return fmt.Errorf("mark transfer request applied: %w", err)
 		}
