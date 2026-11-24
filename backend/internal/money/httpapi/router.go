@@ -19,6 +19,7 @@ func NewRouter(
 	topupService *services.TopupService,
 ) http.Handler {
 	router := chi.NewRouter()
+	registerTransferLimitRoutes(router, pool)
 	client := router.With(auth.RequireRole("CLIENT"))
 	client.Post("/accounts", openAccountHandler(accountService))
 	client.Post("/transfers", createTransferHandler(transferService))

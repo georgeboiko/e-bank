@@ -104,8 +104,7 @@ func writeCreateTransferError(w http.ResponseWriter, err error) {
 		httpserver.WriteProblem(w, http.StatusConflict, "TRANSFER_LIMIT_EXCEEDED",
 			"Превышен лимит", "Сумма превышает остаток дневного или месячного лимита переводов.")
 	default:
-		httpserver.WriteProblem(w, http.StatusInternalServerError, "INTERNAL_ERROR",
-			"Внутренняя ошибка", "Не удалось создать перевод.")
+		writeTransferLimitsError(w, err, "Не удалось создать перевод.")
 	}
 }
 

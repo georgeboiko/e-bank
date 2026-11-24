@@ -1,5 +1,35 @@
 BEGIN;
 
+CREATE OR REPLACE FUNCTION transfer_limit_usage(p_actor_id text, p_at timestamptz)
+RETURNS TABLE (
+    daily_used numeric,
+    monthly_used numeric,
+    daily_resets_at timestamptz,
+    monthly_resets_at timestamptz
+)
+LANGUAGE sql STABLE AS $$
+    WITH periods AS (
+        SELECT date_trunc('day', p_at AT TIME ZONE 'Europe/Moscow') AS day_start,
+               date_trunc('month', p_at AT TIME ZONE 'Europe/Moscow') AS month_start
+    )
+    SELECT totals.daily_used, totals.monthly_used,
+           (periods.day_start + interval '1 day') AT TIME ZONE 'Europe/Moscow',
+           (periods.month_start + interval '1 month') AT TIME ZONE 'Europe/Moscow'
+    FROM periods
+    CROSS JOIN LATERAL (
+        SELECT coalesce(sum(t.amount) FILTER (
+                   WHERE t.created_at >= periods.day_start AT TIME ZONE 'Europe/Moscow'
+               ), 0) AS daily_used,
+               coalesce(sum(t.amount), 0) AS monthly_used
+        FROM transfer AS t
+        JOIN account AS a ON a.id = t.from_account_id
+        WHERE a.owner_id = p_actor_id
+          AND t.created_at >= periods.month_start AT TIME ZONE 'Europe/Moscow'
+          AND t.created_at <= p_at
+          AND t.state IN ('FRAUD_CHECK_PENDING', 'COMPLETING', 'COMPLETED', 'RELEASING_FUNDS')
+    ) AS totals;
+$$;
+
 CREATE OR REPLACE FUNCTION create_transfer(
     p_actor_id text,
     p_from_account_id integer,
@@ -18,8 +48,6 @@ DECLARE
     configured_limits transfer_limits%ROWTYPE;
     transfer_id_created integer;
     operation_at timestamptz;
-    day_start timestamptz;
-    month_start timestamptz;
     daily_used numeric;
     monthly_used numeric;
 BEGIN
@@ -92,22 +120,13 @@ BEGIN
         RAISE EXCEPTION 'Недостаточно доступных средств' USING ERRCODE = 'P3313';
     END IF;
 
-    SELECT * INTO configured_limits FROM transfer_limits WHERE id = 1;
+    SELECT * INTO configured_limits FROM transfer_limits WHERE id = 1 FOR SHARE;
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Лимиты переводов не настроены';
+        RAISE EXCEPTION 'Лимиты переводов не настроены' USING ERRCODE = 'P3317';
     END IF;
 
-    day_start := date_trunc('day', operation_at AT TIME ZONE 'Europe/Moscow')
-        AT TIME ZONE 'Europe/Moscow';
-    month_start := date_trunc('month', operation_at AT TIME ZONE 'Europe/Moscow')
-        AT TIME ZONE 'Europe/Moscow';
-    SELECT coalesce(sum(t.amount) FILTER (WHERE t.created_at >= day_start), 0),
-           coalesce(sum(t.amount), 0)
-    INTO daily_used, monthly_used
-    FROM transfer t JOIN account a ON a.id = t.from_account_id
-    WHERE a.owner_id = p_actor_id
-      AND t.created_at >= month_start AND t.created_at <= operation_at
-      AND t.state IN ('FRAUD_CHECK_PENDING', 'COMPLETING', 'COMPLETED', 'RELEASING_FUNDS');
+    SELECT u.daily_used, u.monthly_used INTO daily_used, monthly_used
+    FROM transfer_limit_usage(p_actor_id, operation_at) AS u;
 
     IF daily_used + p_amount > configured_limits.daily_limit THEN
         RAISE EXCEPTION 'Превышен дневной лимит переводов' USING ERRCODE = 'P3314';
