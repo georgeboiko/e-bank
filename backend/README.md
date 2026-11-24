@@ -158,6 +158,10 @@ PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_
 
 На существующей базе Money примени актуальный `migrations/schema/money_operations.sql` для кодов ошибок операций с пополнением.
 
+### Аналитика и аудит Money
+
+`GET /analytics` и `GET /audit` доступны администратору. Создание денежных операций и смена их состояния фиксируются в аудите.
+
 ### Подключение к Kafka
 
 С хоста используй `KAFKA_BROKERS=localhost:9092`, из контейнера в той же сети Compose — `KAFKA_BROKERS=kafka:29092`.
