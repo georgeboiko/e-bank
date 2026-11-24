@@ -14,6 +14,7 @@ func NewRouter(pool *pgxpool.Pool, authenticate func(http.Handler) http.Handler,
 	router := chi.NewRouter()
 	registerAdminReadRoutes(router, directory)
 	registerAdminActionRoutes(router, pool, directory)
+	registerReportingRoutes(router, pool, directory)
 
 	return httpserver.WithHealth(pool, authenticate(router))
 }
