@@ -1,13 +1,35 @@
 package request
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 )
+
+func ParseAccountState(body io.Reader) (string, error) {
+	var payload struct {
+		State string `json:"state"`
+	}
+	decoder := json.NewDecoder(body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&payload); err != nil {
+		return "", errors.New("проверьте поля и формат JSON")
+	}
+	if err := decoder.Decode(new(json.RawMessage)); err != io.EOF {
+		return "", errors.New("тело запроса должно содержать один JSON-объект")
+	}
+	switch payload.State {
+	case "ACTIVE", "BLOCKED", "CLOSED":
+		return payload.State, nil
+	default:
+		return "", errors.New("state должен быть ACTIVE, BLOCKED или CLOSED")
+	}
+}
 
 type AccountList struct {
 	OwnerID *string

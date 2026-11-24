@@ -112,6 +112,37 @@ func getAccountHandler(accountService *services.AccountService) http.HandlerFunc
 	}
 }
 
+func setAccountStateHandler(accountService *services.AccountService) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(chi.URLParam(r, "accountId"), 10, 32)
+		if err != nil || id < 1 {
+			httpserver.WriteProblem(w, http.StatusBadRequest, "VALIDATION_ERROR",
+				"Некорректный запрос", "accountId должен быть положительным целым числом типа int32.")
+			return
+		}
+		state, err := request.ParseAccountState(http.MaxBytesReader(w, r.Body, 4<<10))
+		if err != nil {
+			httpserver.WriteProblem(w, http.StatusBadRequest, "VALIDATION_ERROR", "Некорректный запрос", err.Error())
+			return
+		}
+
+		principal, _ := auth.PrincipalFromContext(r.Context())
+		account, err := accountService.SetAccountState(r.Context(), int32(id), state, principal.Subject)
+		switch {
+		case errors.Is(err, models.ErrAccountNotFound):
+			httpserver.WriteProblem(w, http.StatusNotFound, "NOT_FOUND", "Счёт не найден", "Запрошенный счёт недоступен.")
+		case errors.Is(err, models.ErrAccountStateConflict):
+			httpserver.WriteProblem(w, http.StatusConflict, "ACCOUNT_STATE_CONFLICT",
+				"Недопустимое состояние счёта", "Закрытие требует нулевого баланса, резерва и отсутствия незавершённых операций. Закрытый счёт нельзя открыть повторно.")
+		case err != nil:
+			httpserver.WriteProblem(w, http.StatusInternalServerError, "INTERNAL_ERROR",
+				"Внутренняя ошибка", "Не удалось изменить состояние счёта.")
+		default:
+			render.JSON(w, r, toAccountResponse(account))
+		}
+	}
+}
+
 func toAccountResponse(account models.Account) response.Account {
 	return response.Account{
 		ID:               account.ID,

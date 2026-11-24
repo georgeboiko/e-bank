@@ -63,3 +63,29 @@ func (s *AccountService) GetAccount(ctx context.Context, subject string, admin b
 	}
 	return s.repository.GetAccount(ctx, id, ownerID)
 }
+
+func (s *AccountService) SetAccountState(ctx context.Context, id int32, state, actorID string) (models.Account, error) {
+	account, err := s.repository.SetState(ctx, id, state, actorID, func(account models.Account) (string, error) {
+		if account.State == state {
+			return "", nil
+		}
+		if account.State == "CLOSED" {
+			return "", models.ErrAccountStateConflict
+		}
+		switch state {
+		case "ACTIVE":
+			return "ACCOUNT_UNBLOCKED", nil
+		case "BLOCKED":
+			return "ACCOUNT_BLOCKED", nil
+		case "CLOSED":
+			if account.Balance.IsZero() && account.ReservedSum.IsZero() {
+				return "ACCOUNT_CLOSED", nil
+			}
+		}
+		return "", models.ErrAccountStateConflict
+	})
+	if err != nil {
+		return models.Account{}, fmt.Errorf("set account state: %w", err)
+	}
+	return account, nil
+}
