@@ -16,11 +16,13 @@ func NewRouter(
 	authenticate func(http.Handler) http.Handler,
 	accountService *services.AccountService,
 	transferService *services.TransferService,
+	topupService *services.TopupService,
 ) http.Handler {
 	router := chi.NewRouter()
 	client := router.With(auth.RequireRole("CLIENT"))
 	client.Post("/accounts", openAccountHandler(accountService))
 	client.Post("/transfers", createTransferHandler(transferService))
+	client.Post("/topups", createTopupHandler(topupService))
 	read := router.With(auth.RequireRole("CLIENT", "ADMIN"))
 	read.Get("/accounts", listAccountsHandler(accountService))
 	read.Get("/accounts/{accountId}", getAccountHandler(accountService))

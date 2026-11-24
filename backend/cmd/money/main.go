@@ -47,6 +47,11 @@ func run(logger *slog.Logger) error {
 	}
 	defer pool.Close()
 
+	topupService, err := configureTopups(pool)
+	if err != nil {
+		return err
+	}
+
 	consumer, err := kgo.NewClient(
 		kgo.SeedBrokers(config.GetKafkaBrokers()...),
 		kgo.ConsumeTopics(kafka.TopicFraudDecision),
@@ -102,7 +107,7 @@ func run(logger *slog.Logger) error {
 	accountService := services.NewAccountService(accountRepository, config.MoneyMaxAccountsPerClient)
 	transferRepository := repositories.NewTransferRepository(pool)
 	transferService := services.NewTransferService(transferRepository)
-	serverErr := httpserver.Run(runCtx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService, transferService))
+	serverErr := httpserver.Run(runCtx, logger, addr, httpapi.NewRouter(pool, authenticate, accountService, transferService, topupService))
 	cancel()
 	return errors.Join(serverErr, <-consumerDone)
 }
