@@ -8,8 +8,9 @@ import (
 )
 
 var (
-	ErrAccountLimitReached = errors.New("account limit reached")
-	ErrAccountNotFound     = errors.New("account not found")
+	ErrAccountLimitReached  = errors.New("account limit reached")
+	ErrAccountNotFound      = errors.New("account not found")
+	ErrAccountStateConflict = errors.New("account state conflict")
 )
 
 type Account struct {

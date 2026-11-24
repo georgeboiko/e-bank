@@ -31,6 +31,7 @@ func NewRouter(
 	read.Get("/transfers", listTransfersHandler(transferService))
 	read.Get("/transfers/{transferId}", getTransferHandler(transferService))
 	read.Get("/topups/{topupId}", getTopupHandler(topupService))
+	router.With(auth.RequireRole("ADMIN")).Patch("/accounts/{accountId}/state", setAccountStateHandler(accountService))
 
 	return httpserver.WithHealth(pool, authenticate(router))
 }
