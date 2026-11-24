@@ -24,6 +24,7 @@ func NewRouter(
 	client.Post("/transfers", createTransferHandler(transferService))
 	client.Post("/topups", createTopupHandler(topupService))
 	client.Post("/topups/{topupId}/refresh", refreshTopupHandler(topupService))
+	registerReportingRoutes(router, pool)
 	read := router.With(auth.RequireRole("CLIENT", "ADMIN"))
 	read.Get("/accounts", listAccountsHandler(accountService))
 	read.Get("/accounts/{accountId}", getAccountHandler(accountService))

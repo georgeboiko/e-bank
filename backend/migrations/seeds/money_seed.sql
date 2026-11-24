@@ -84,11 +84,11 @@ INSERT INTO inbox_event (event_id, transfer_id, payload, applied, processed_at) 
     ('01a17c29-1e80-7132-8000-000000000132', 6, '{"eventId":"01a17c29-1e80-7132-8000-000000000132","eventType":"FraudDecision","occurredAt":"2026-10-27T07:00:32Z","data":{"transferId":6,"decision":"APPROVED","riskScore":15,"source":"AUTOMATIC","triggeredRules":[{"ruleId":3,"score":15,"reason":"Новое устройство в первые 24 часа"}]}}'::jsonb, true, '2026-10-27 10:00:34+03:00'),
     ('01a17c29-93b0-7133-8000-000000000133', 7, '{"eventId":"01a17c29-93b0-7133-8000-000000000133","eventType":"FraudDecision","occurredAt":"2026-10-27T07:01:02Z","data":{"transferId":7,"decision":"REJECTED","riskScore":75,"source":"AUTOMATIC","triggeredRules":[{"ruleId":1,"score":15,"reason":"Не менее трёх попыток за две минуты"},{"ruleId":2,"score":30,"reason":"Сумма выше сильного порога по истории клиента"},{"ruleId":3,"score":15,"reason":"Новое устройство в первые 24 часа"},{"ruleId":8,"score":15,"reason":"Москва после входа из Санкт-Петербурга менее двух часов назад"}]}}'::jsonb, true, '2026-10-27 10:01:04+03:00');
 
-INSERT INTO audit_log (id, occurred_at, actor_type, actor_id, action, account_id, details) VALUES
-    (1, '2026-10-25 11:00:00+03:00', 'SYSTEM', NULL, 'ACCOUNT_OPENED', 1, '{"initialBalance":0}'::jsonb),
-    (2, '2026-10-25 11:00:00+03:00', 'USER', '11111111-1111-4111-8111-111111111111', 'ACCOUNT_OPENED', 2, '{"initialBalance":0}'::jsonb),
-    (3, '2026-10-25 11:00:00+03:00', 'USER', '22222222-2222-4222-8222-222222222222', 'ACCOUNT_OPENED', 3, '{"initialBalance":0}'::jsonb),
-    (4, '2026-10-25 11:00:00+03:00', 'USER', '33333333-3333-4333-8333-333333333333', 'ACCOUNT_OPENED', 4, '{"initialBalance":0}'::jsonb);
+INSERT INTO audit_log (occurred_at, actor_type, actor_id, action, account_id, details) VALUES
+    ('2026-10-25 11:00:00+03:00', 'SYSTEM', NULL, 'ACCOUNT_OPENED', 1, '{"initialBalance":0}'::jsonb),
+    ('2026-10-25 11:00:00+03:00', 'USER', '11111111-1111-4111-8111-111111111111', 'ACCOUNT_OPENED', 2, '{"initialBalance":0}'::jsonb),
+    ('2026-10-25 11:00:00+03:00', 'USER', '22222222-2222-4222-8222-222222222222', 'ACCOUNT_OPENED', 3, '{"initialBalance":0}'::jsonb),
+    ('2026-10-25 11:00:00+03:00', 'USER', '33333333-3333-4333-8333-333333333333', 'ACCOUNT_OPENED', 4, '{"initialBalance":0}'::jsonb);
 
 SELECT setval('account_id_seq', (SELECT max(id) FROM account));
 SELECT setval('transfer_id_seq', (SELECT max(id) FROM transfer));

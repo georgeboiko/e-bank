@@ -21,5 +21,5 @@ SQL
 }
 
 create_database "$USER_DB_USER" "$USER_DB_PASSWORD" 5433 "$USER_DB_NAME" schema/user.sql schema/user_operations.sql schema/user_indexes.sql
-create_database "$MONEY_DB_USER" "$MONEY_DB_PASSWORD" 5434 "$MONEY_DB_NAME" schema/money.sql schema/money_operations.sql schema/money_indexes.sql
+create_database "$MONEY_DB_USER" "$MONEY_DB_PASSWORD" 5434 "$MONEY_DB_NAME" schema/money.sql schema/money_operations.sql schema/money_indexes.sql schema/money_reporting.sql
 create_database "$ANTIFRAUD_DB_USER" "$ANTIFRAUD_DB_PASSWORD" 5435 "$ANTIFRAUD_DB_NAME" schema/antifraud.sql schema/antifraud_operations.sql schema/antifraud_indexes.sql schema/antifraud_rule_settings.sql

@@ -727,7 +727,8 @@ paths:
       description: 'Роли: ADMIN.
 
 
-        Сортировка occurredAt DESC, id DESC. Набор действий должен покрывать счета, лимиты и переходы переводов.'
+        Сортировка occurredAt DESC, id DESC. События денежных операций имеют objectType TRANSFER и действия
+        TRANSFER_CREATED или TRANSFER_STATE_CHANGED. Фильтр accountId находит операции по любому из двух счетов.'
       x-roles:
       - ADMIN
       responses:
