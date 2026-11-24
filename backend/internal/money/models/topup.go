@@ -8,6 +8,8 @@ import (
 )
 
 var (
+	ErrTopupNoPayment       = errors.New("external payment has not been registered")
+	ErrTopupInvalidState    = errors.New("topup state does not accept the provider decision")
 	ErrTopupNotFound        = errors.New("topup not found")
 	ErrTopupsUnavailable    = errors.New("test payment provider is not configured")
 	ErrTopupPaymentMismatch = errors.New("provider payment does not match the topup")
