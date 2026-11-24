@@ -47,6 +47,16 @@ go run ./cmd/user  # или go run ./cmd/money, go run ./cmd/antifraud
 
 `GET /health` доступен без токена, проверяет БД сервиса и возвращает `200 UP` или `503 DOWN`.
 
+## Запись успешных входов
+
+User читает успешные события `LOGIN` банковского клиента через [Keycloak Admin Events API](https://www.keycloak.org/docs-api/latest/rest-api/index.html). Используй Keycloak 26.4 или новее с идентификаторами событий и фильтрами по времени в миллисекундах. Включи сохранение `LOGIN` в настройках realm и задай срок хранения событий с запасом на простой User. В realm используется стандартный `sub`, который равен `userId` события.
+
+- `KEYCLOAK_LOGIN_CLIENT_ID` — ID OIDC-клиента банка.
+- `KEYCLOAK_EVENTS_CLIENT_ID` и `KEYCLOAK_EVENTS_CLIENT_SECRET` — отдельный конфиденциальный клиент с Service Accounts и ролью `realm-management.view-events`. Если обе переменные отсутствуют, User запускается без опроса.
+- `KEYCLOAK_EVENTS_REALM_URL` — при необходимости внутренний URL того же realm для access token и Admin API. По умолчанию используется `KEYCLOAK_ISSUER`.
+
+За Nginx задай для Keycloak `KC_PROXY_HEADERS=xforwarded` и `KC_PROXY_TRUSTED_ADDRESSES` с адресом Nginx. Ограничь прямой доступ клиентов к Keycloak. Действующий конфиг Nginx устанавливает `X-Forwarded-For` из адреса подключения. User берёт IP и время из события Keycloak, сохраняет вход и Outbox одной операцией `record_login`. При повторном чтении того же Keycloak event ID запись не дублируется.
+
 ## Nginx
 
 При локальном запуске Nginx слушает `127.0.0.1:8088`. Запусти Go-сервисы на портах из таблицы выше, затем из каталога `backend` выполни:
