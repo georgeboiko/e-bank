@@ -158,16 +158,9 @@ PGPASSWORD="$ANTIFRAUD_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5435 -U "$ANTIFRAUD_
 
 На существующей базе Money примени актуальный `migrations/schema/money_operations.sql` для кодов ошибок операций с пополнением.
 
-### Обновление аудита Money
+### Аналитика и аудит Money
 
-Новая база получает `money_reporting.sql` через `create.sh`. Для существующей базы Money выполни из каталога `backend`:
-
-```sh
-. ./.env.test
-PGPASSWORD="$MONEY_DB_PASSWORD" psql -X -h 127.0.0.1 -p 5434 -U "$MONEY_DB_USER" -d "$MONEY_DB_NAME" -v ON_ERROR_STOP=1 -f migrations/schema/money_reporting.sql
-```
-
-`GET /analytics` и `GET /audit` доступны администратору. Создание и смена состояния денежных операций попадают в аудит после установки миграции.
+`GET /analytics` и `GET /audit` доступны администратору. Создание денежных операций и смена их состояния фиксируются в аудите.
 
 ### Подключение к Kafka
 

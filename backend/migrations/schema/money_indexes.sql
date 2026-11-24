@@ -9,6 +9,9 @@ CREATE INDEX transfer_to_created_idx
 
 CREATE INDEX transfer_created_idx ON transfer (created_at);
 
+CREATE INDEX transfer_completed_finished_idx
+    ON transfer (finished_at) WHERE state = 'COMPLETED';
+
 CREATE INDEX transfer_processing_idx ON transfer (id)
     WHERE state IN ('COMPLETING', 'RELEASING_FUNDS');
 

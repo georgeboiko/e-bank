@@ -74,10 +74,15 @@ CREATE TABLE audit_log (
     actor_id text,
     action text NOT NULL CHECK (action IN (
         'ACCOUNT_OPENED', 'ACCOUNT_BLOCKED', 'ACCOUNT_UNBLOCKED',
-        'ACCOUNT_CLOSED', 'LIMIT_CHANGED'
+        'ACCOUNT_CLOSED', 'LIMIT_CHANGED', 'TRANSFER_CREATED', 'TRANSFER_STATE_CHANGED'
     )),
     account_id integer REFERENCES account(id),
+    transfer_id integer REFERENCES transfer(id),
     details jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(details) = 'object'),
+    CONSTRAINT audit_log_transfer_subject_check CHECK (
+        (action IN ('TRANSFER_CREATED', 'TRANSFER_STATE_CHANGED')) = (transfer_id IS NOT NULL)
+        AND (transfer_id IS NULL OR account_id IS NULL)
+    ),
     CHECK (
         (actor_type = 'SYSTEM' AND actor_id IS NULL)
         OR (actor_type <> 'SYSTEM' AND actor_id IS NOT NULL AND btrim(actor_id) <> '')
@@ -210,6 +215,33 @@ $$;
 CREATE TRIGGER validate_transfer_change
 BEFORE INSERT OR UPDATE ON transfer
 FOR EACH ROW EXECUTE FUNCTION validate_transfer_change();
+
+CREATE FUNCTION record_transfer_audit()
+RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+    owner_sub text;
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        SELECT coalesce(sender.owner_id, recipient.owner_id) INTO owner_sub
+        FROM account sender CROSS JOIN account recipient
+        WHERE sender.id = NEW.from_account_id AND recipient.id = NEW.to_account_id;
+
+        INSERT INTO audit_log (occurred_at, actor_type, actor_id, action, transfer_id, details)
+        VALUES (NEW.created_at, CASE WHEN owner_sub IS NULL THEN 'SYSTEM' ELSE 'USER' END,
+            owner_sub, 'TRANSFER_CREATED', NEW.id, jsonb_build_object('state', NEW.state));
+    ELSIF NEW.state <> OLD.state THEN
+        INSERT INTO audit_log (occurred_at, actor_type, action, transfer_id, details)
+        VALUES (NEW.updated_at, 'SYSTEM', 'TRANSFER_STATE_CHANGED', NEW.id,
+            jsonb_build_object('previousState', OLD.state, 'state', NEW.state));
+    END IF;
+
+    RETURN NULL;
+END;
+$$;
+
+CREATE TRIGGER record_transfer_audit
+AFTER INSERT OR UPDATE OF state ON transfer
+FOR EACH ROW EXECUTE FUNCTION record_transfer_audit();
 
 CREATE FUNCTION protect_money_history()
 RETURNS trigger LANGUAGE plpgsql AS $$
