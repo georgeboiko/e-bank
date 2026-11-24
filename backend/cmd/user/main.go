@@ -42,7 +42,12 @@ func run(logger *slog.Logger) error {
 	}
 	defer stopPublisher()
 
-	return runWithLoginIngestion(ctx, logger, pool, addr, httpapi.NewRouter(pool, authenticate))
+	directory, err := configureKeycloakAdmin()
+	if err != nil {
+		return err
+	}
+
+	return runWithLoginIngestion(ctx, logger, pool, addr, httpapi.NewRouter(pool, authenticate, directory))
 }
 
 func main() {
