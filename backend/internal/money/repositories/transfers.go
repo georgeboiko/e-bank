@@ -95,6 +95,8 @@ func transferCreateError(err error) error {
 		return models.ErrInsufficientFunds
 	case "P3314":
 		return models.ErrTransferLimit
+	case "P3317":
+		return models.ErrLimitsNotConfigured
 	default:
 		return err
 	}
