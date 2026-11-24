@@ -12,6 +12,15 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+const transferView = `
+		SELECT t.id, t.from_account_id, t.to_account_id, t.amount, t.state, t.reject_cause,
+		       t.created_at, t.updated_at, t.finished_at,
+		       CASE sender.type WHEN 'TECHNICAL' THEN 'TOPUP' ELSE 'TRANSFER' END AS type
+		FROM transfer AS t
+		JOIN account AS sender ON sender.id = t.from_account_id
+		JOIN account AS recipient ON recipient.id = t.to_account_id
+`
+
 type TransferRepository struct {
 	pool *pgxpool.Pool
 }
@@ -54,13 +63,7 @@ func (r *TransferRepository) Create(ctx context.Context, input models.CreateTran
 }
 
 func (r *TransferRepository) Get(ctx context.Context, id int32, ownerID *string) (models.Transfer, error) {
-	rows, err := r.pool.Query(ctx, `
-		SELECT t.id, t.from_account_id, t.to_account_id, t.amount, t.state, t.reject_cause,
-		       t.created_at, t.updated_at, t.finished_at,
-		       CASE sender.type WHEN 'TECHNICAL' THEN 'TOPUP' ELSE 'TRANSFER' END AS type
-		FROM transfer AS t
-		JOIN account AS sender ON sender.id = t.from_account_id
-		JOIN account AS recipient ON recipient.id = t.to_account_id
+	rows, err := r.pool.Query(ctx, transferView+`
 		WHERE t.id = $1
 		  AND ($2::text IS NULL OR sender.owner_id = $2 OR recipient.owner_id = $2)
 	`, id, ownerID)
